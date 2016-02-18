@@ -1,4 +1,4 @@
-STUDENTS=graham_knuth_patashnik
+STUDENTS=Mikkel_Simon_kristian
 ASSIGNMENT=1
 VERSION=1
 
