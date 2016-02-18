@@ -67,8 +67,20 @@
 \pagestyle{plain}
 \setcounter{page}{1}
 \pagenumbering{arabic}
-\begin{document}
 
 \section*{A Heap-based priority Queue}
-  
+\begin{enumerate}
+  \item We have implemented the queue as max heap. Our datastructure has three items: a int* root, int size and int capacity. The root is a integer pointer to the start of our heap. For navigating in our heap,we have created three macros in queue.h: PARENT, LEFT and RIGHT.
+size keeps track of the size of the heap\\
+int capacity keeps track of the items we have allocated space to.\\
+In queue\_pop we simply just return the value in the root. then we set the last item of the queue the root item and call max\_heapify which restores the max heap attribute.\\
+In queue\_push we insert our new priority in last in our heap. The we bottom-up compares the priority the the parent and swap if need. \\
+if the number of items is equal to capacity we allocated to th
+\\
+\item queue\_pop returns 1 if the queue\_pop is called on a empty queue.\\
+A queue can be initialized agian after queue\_destroy has been called since we only free the alloced space for the queues items.
+\item We added a test target to our Makefile. by running make test it runs the command pyhon3 bounce.py\\
+we have tried bounce.py with different number of tests ranging from 50-1000 and all did pass.\\
+\end{enumerate}
+\section*{Kudos System Calls for Basic I/O}  
 \end{document}
