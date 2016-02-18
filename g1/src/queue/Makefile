@@ -1,4 +1,4 @@
-.PHONY: all clean valgrind quickgrind debug heap
+.PHONY: all clean valgrind quickgrind debug test
 
 CC=gcc
 CFLAGS=-Werror -Wextra -pedantic -std=c11 -g 
@@ -20,3 +20,5 @@ quickgrind: bouncer
 
 debug: input.txt gdb.script bouncer
 	gdb -q -x gdb.script ./bouncer
+test: bounce.py queue.c bouncer.c
+	python3 bounce.py

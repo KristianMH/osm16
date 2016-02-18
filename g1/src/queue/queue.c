@@ -18,9 +18,6 @@ int queue_destroy(struct queue *queue) {
   free(queue->root);
   return 0;
 }
-int queue_size(struct queue *queue) {
-  return queue->size;
-}
 int queue_push(struct queue *queue, int pri) {
   int newNode = pri;
   if (queue->size == queue->capacity) {
@@ -31,10 +28,9 @@ int queue_push(struct queue *queue, int pri) {
   //index of new node
   int index = queue->size;
   queue->size++;
+  // inserts new node last in queue.
   queue->root[index] = newNode;
-  if (index == 0) {
-    queue->root[0] = newNode;
-  }
+
   while (queue->root[PARENT(index)] < queue->root[index]) {
     exchange(queue, index, PARENT(index));
     index = PARENT(index);
@@ -50,7 +46,7 @@ void max_heapify(struct queue *queue, int index){
   int right_priority = queue->root[right];
   int index_priority = queue->root[index];
   int largest;
-  if (left < queue->size && left_priority > right_priority) {
+  if (left < queue->size && left_priority > index_priority) {
     largest = left;
   } else {
     largest = index;

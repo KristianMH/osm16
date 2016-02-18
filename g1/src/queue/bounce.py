@@ -3,8 +3,8 @@
 import random, tempfile, os
 
 TEST_DIR = "tests"
-N_TESTS = 50
-INIT_SIZE = 50
+N_TESTS = 100
+INIT_SIZE = 100
 
 # Positive tests:
 # 1. Push n elements, pop m <= n elements.
