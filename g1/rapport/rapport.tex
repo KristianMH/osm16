@@ -75,8 +75,8 @@ size keeps track of the size of the heap\\
 int capacity keeps track of the items we have allocated space to.\\
 In queue\_pop we simply just return the value in the root. then we set the last item of the queue the root item and call max\_heapify which restores the max heap attribute.\\
 In queue\_push we insert our new priority in last in our heap. The we bottom-up compares the priority the the parent and swap if need. \\
-if the number of items is equal to capacity we allocated to th
-\\
+if the number of items is equal to capacity we allocated, we call realloc. realloc changes the size of the memory block pointer by the argument pointer. By this we can add more capacity.\\
+According the man page can realloc fail and return a null pointer. That is why we check if the returned pointer is different from NULL. Fortunately does realloc not change the original memory block if the fails.
 \item queue\_pop returns 1 if the queue\_pop is called on a empty queue.\\
 A queue can be initialized agian after queue\_destroy has been called since we only free the alloced space for the queues items.
 \item We added a test target to our Makefile. by running make test it runs the command pyhon3 bounce.py\\
