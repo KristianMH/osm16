@@ -3,7 +3,7 @@
 #include "queue.h"
 
 void exchange(struct queue *queue, int i, int j) {
- struct node temp = queue->root[j];
+ int temp = queue->root[j];
  queue->root[j] = queue->root[i];
  queue->root[i] = temp;
 }
@@ -22,8 +22,7 @@ int queue_size(struct queue *queue) {
   return queue->size;
 }
 int queue_push(struct queue *queue, int pri) {
-  struct node newNode;
-  newNode.priority = pri;
+  int newNode = pri;
   if (queue->size == queue->capacity) {
     queue->capacity = (queue->capacity+1)*2;
     queue->root = realloc(queue->root, sizeof(newNode)*queue->capacity);
@@ -36,7 +35,7 @@ int queue_push(struct queue *queue, int pri) {
   if (index == 0) {
     queue->root[0] = newNode;
   }
-  while (queue->root[PARENT(index)].priority < queue->root[index].priority) {
+  while (queue->root[PARENT(index)] < queue->root[index]) {
     exchange(queue, index, PARENT(index));
     index = PARENT(index);
   }
@@ -47,19 +46,19 @@ int queue_push(struct queue *queue, int pri) {
 void max_heapify(struct queue *queue, int index){
   int left = RIGHT(index);
   int right = LEFT(index);
-  int left_priority = queue->root[left].priority;
-  int right_priority = queue->root[right].priority;
-  int index_priority = queue->root[index].priority;
+  int left_priority = queue->root[left];
+  int right_priority = queue->root[right];
+  int index_priority = queue->root[index];
   int largest;
   if (left < queue->size && left_priority > right_priority) {
     largest = left;
   } else {
     largest = index;
   }
-  if (right < queue->size && right_priority > queue->root[largest].priority) {
+  if (right < queue->size && right_priority > queue->root[largest]) {
     largest=right;
   }
-  if (index_priority !=  queue->root[largest].priority) {
+  if (index_priority !=  queue->root[largest]) {
     exchange(queue, index, largest);
     max_heapify(queue, largest);
   }
@@ -69,7 +68,7 @@ int queue_pop(struct queue *queue, int *pri_ptr) {
   if (queue->size < 1) {
     return 1;
   }
-  int prio = (queue->root)->priority;
+  int prio = *queue->root;
   *pri_ptr = prio;
   queue->size--;
   exchange(queue, 0, queue->size);

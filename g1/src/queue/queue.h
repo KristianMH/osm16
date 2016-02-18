@@ -5,14 +5,9 @@
 #define RIGHT(i) i*2
 #define LEFT(i) i*2+1
 
-struct node {
-  //void* thing; //perhaps a program address that could be stored here?
-  int priority;
-};
-
 //heap based queue structure. Root has highest priority.
 struct queue{
-  struct node* root;
+  int* root;
   int size;
   int capacity; //allocated space
 };
