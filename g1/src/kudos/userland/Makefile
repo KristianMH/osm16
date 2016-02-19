@@ -1,6 +1,6 @@
 # Add your _userland_ program sources to the SOURCES variable.
 
-SOURCES :=  halt.c shell.c hw.c hello.c
+SOURCES :=  halt.c shell.c hw.c hello.c rw.c
 
 MIPS32INC = -I../kudos/lib/mips32/
 X86_64INC = -I../kudos/lib/x86_64/
