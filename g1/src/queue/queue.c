@@ -61,7 +61,7 @@ void max_heapify(struct queue *queue, int index){
   if (right < queue->size && queue->root[right] > queue->root[largest]) {
     largest=right;
   }
-  if (index_priority !=  queue->root[largest]) {
+  if (index !=  largest) {
     exchange(queue, index, largest);
     max_heapify(queue, largest);
   }
