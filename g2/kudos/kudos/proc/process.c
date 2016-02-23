@@ -12,6 +12,7 @@
 #include "fs/vfs.h"
 #include "kernel/sleepq.h"
 #include "vm/memory.h"
+#include "lib/libc.h"
 
 
 /** @name Process startup
@@ -22,7 +23,8 @@
 
 extern void process_set_pagetable(pagetable_t*);
 
-process_control_block_t process_table[PROCESS_MAX_PROCESSES];
+process_control_block_t process_table[0];
+int ptable_elements;
 
 /* Return non-zero on error. */
 int setup_new_process(TID_t thread,
@@ -208,3 +210,74 @@ void process_start(const char *executable, const char **argv)
 
   thread_goto_userland(&user_context);
 }
+
+process_id_t find_pid() {
+  if (ptable_elements < PROCESS_MAX_PROCESSES) {
+    return ptable_elements++;
+  }
+  for(int i=0; i < PROCESS_MAX_PROCESSES; i++) {
+    if (process_table[i].dead == 1) {
+      return i;
+    }
+  }
+  return PROCESS_PTABLE_FULL;
+}
+
+process_id_t process_spawn(char const* executable, char const **argv){
+  TID_t new_thread;
+  virtaddr_t entry_point;
+  process_id_t ret;
+  context_t user_context;
+  virtaddr_t stack_top;
+  process_control_block_t user_process;
+  ret = find_pid();
+  if (ret == PROCESS_PTABLE_FULL) {
+    return -1; /* something went wrong */
+  }
+  new_thread = thread_create(NULL, 0);
+  ret = setup_new_process(new_thread, executable, argv,
+                          &entry_point, &stack_top);
+
+  if (ret != 0) {
+    return -1; /* Something went wrong. */
+  }
+  user_process.running = 1;
+  process_set_pagetable(thread_get_thread_entry(new_thread)->pagetable);
+
+  /* Initialize the user context. (Status register is handled by
+     thread_goto_userland) */
+  memoryset(&user_context, 0, sizeof(user_context));
+
+  _context_set_ip(&user_context, entry_point);
+  _context_set_sp(&user_context, stack_top);
+
+  thread_goto_userland(&user_context);
+  process_table[ret] = user_process;
+  return ret;
+}
+
+void process_init(){
+  process_control_block_t dummy;
+  process_table[PROCESS_MAX_PROCESSES] = dummy;
+  ptable_elements = 0;
+}
+
+process_id_t process_get_current_process() {
+  for (int i = 0; i <= ptable_elements; i++) {
+    if (process_table[i].running == 1) {
+      return i;
+    }
+  }
+  return -300;
+}
+
+/*
+process_control_block_t *process_get_current_process_entry() {
+  for (int i = 0; i <= ptable_elements; i++) {
+    if (process_table[i].running == 1) {
+      return process_table[i];
+    }
+  }
+  return (process_control_block_t *) NULL;
+}
+*/
