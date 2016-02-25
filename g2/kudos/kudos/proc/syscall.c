@@ -9,6 +9,7 @@
 #include "kernel/assert.h"
 #include "vm/memory.h"
 #include "drivers/polltty.h"
+#include "process.h"
 
 int syscall_write(const char *buffer, int length) {
   /* Not a G1 solution! */
@@ -50,6 +51,15 @@ uintptr_t syscall_entry(uintptr_t syscall,
     break;
   case SYSCALL_WRITE:
     return syscall_write((const void*)arg1, (int)arg2);
+    break;
+  case SYSCALL_SPAWN:
+    return process_spawn((char const*)arg1, (char const**)arg2);
+    break;
+  case SYSCALL_EXIT:
+    process_exit((int)arg1);
+    break;
+  case SYSCALL_JOIN:
+    return process_join((int)arg1);
     break;
   default:
     KERNEL_PANIC("Unhandled system call\n");

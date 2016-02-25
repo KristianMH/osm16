@@ -24,6 +24,7 @@ extern void process_set_pagetable(pagetable_t*);
 
 process_control_block_t process_table[PROCESS_MAX_PROCESSES];
 spinlock_t process_table_slock;
+spinlock_t resource_slock;
 
 
 /* Return non-zero on error. */
@@ -229,11 +230,14 @@ process_id_t process_spawn(char const* executable, char const **argv){
   process_control_block_t user_process;
   int ret;
   interrupt_status_t int_status;
+  kprintf(executable);
+  kprintf("\n");
   int_status = _interrupt_disable();
   spinlock_acquire(&process_table_slock);
   pid = find_pid();
   if (pid == PROCESS_PTABLE_FULL) {
     //release spinloc on error
+    kprintf("process_PTABLE_FULL\n");
     spinlock_release(&process_table_slock);
     return -1; /* something went wrong */
   }
@@ -243,6 +247,7 @@ process_id_t process_spawn(char const* executable, char const **argv){
   if (ret != 0) {
     //release spinloc on error
     spinlock_release(&process_table_slock);
+    kprintf("setup failed\n");
     return -1; /* Something went wrong. */
   }
   
@@ -271,6 +276,7 @@ void process_init() {
   interrupt_status_t int_status;
   int_status = _interrupt_disable();
   spinlock_reset(&process_table_slock);
+  spinlock_reset(&resource_slock);
   spinlock_acquire(&process_table_slock);
   for (int i = 0; i < PROCESS_MAX_PROCESSES; i++) {
     process_table[i].state=FREE;
@@ -282,6 +288,27 @@ void process_init() {
   _interrupt_set_state(int_status);
 }
 
+int find_waiting() {
+  int i = 0;
+  for (; i < PROCESS_MAX_PROCESSES; i++) {
+    if (process_table[i].state == WAITING) {
+      i++;
+    }
+  }
+  return i;
+}
+void wake_waiting(process_id_t pid) {
+  int n = find_waiting();
+  spinlock_acquire(&resource_slock);
+  if (n > 0) {
+    if (n > 1) {
+      sleepq_wake_all(&process_table[pid]);
+    } else {
+      sleepq_wake(&process_table[pid]);
+    }
+  }
+  spinlock_release(&resource_slock);
+}
 void process_exit(int retval) {
   thread_table_t *thr;
   interrupt_status_t int_status;
@@ -293,6 +320,7 @@ void process_exit(int retval) {
   // interrupt and spinlock
   int_status = _interrupt_disable();
   spinlock_acquire(&process_table_slock);
+  wake_waiting(process_block->pid);
   process_block->retval = retval;
   process_block->state  = FREE;
   process_block->parent = (int)NULL;
@@ -304,8 +332,27 @@ void process_exit(int retval) {
 }
 
 int process_join(process_id_t pid){
-  pid = pid;
-  return 0;
+  process_control_block_t process_block;
+  interrupt_status_t int_status;
+  int ret;
+  int_status = _interrupt_disable();
+  // acquire resource from table
+  spinlock_acquire(&process_table_slock);
+  process_block = process_table[pid];
+  spinlock_release(&process_table_slock);
+  // acquire resource lock
+  spinlock_acquire(&resource_slock);
+  // waits for process to finish(die?)
+  while (process_block.state == RUNNING) {
+    sleepq_add(&process_block);
+    spinlock_release(&resource_slock);
+    thread_switch();
+    spinlock_acquire(&resource_slock);
+  }
+  ret = process_block.retval;
+  spinlock_release(&resource_slock);
+  _interrupt_set_state(int_status);
+  return ret;
 }
 process_id_t process_get_current_process() {
   return thread_get_current_thread_entry()->process_id;

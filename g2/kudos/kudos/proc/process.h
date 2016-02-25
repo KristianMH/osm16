@@ -21,9 +21,9 @@ typedef int process_id_t;
 
 typedef enum {
   RUNNING,
-  READY,
   FREE,
-  ZOMBIE
+  ZOMBIE,
+  WAITING
 } process_state_t;
 
 typedef struct {
