@@ -7,6 +7,8 @@
 
 #include "lib/types.h"
 #include "vm/memory.h"
+#include "kernel/spinlock.h"
+#include "kernel/sleepq.h"
 
 #define PROCESS_PTABLE_FULL  -1
 #define PROCESS_ILLEGAL_JOIN -2
@@ -17,12 +19,18 @@
 
 typedef int process_id_t;
 
+typedef enum {
+  RUNNING,
+  READY,
+  FREE,
+  ZOMBIE
+} process_state_t;
+
 typedef struct {
-  /* Remove this when you add other fields. */
-  int dummy;
-  int dead;
-  int zombie;
-  int running;
+  process_state_t state;
+  process_id_t pid;
+  int retval;
+  process_id_t parent;
 } process_control_block_t;
 
 void process_start(const char *executable, const char **argv);
