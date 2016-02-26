@@ -42,7 +42,9 @@ int syscall_spawn(const char *filename, const char **argv)
  */
 void syscall_exit(int retval)
 {
-  _syscall(SYSCALL_EXIT, (uintptr_t)retval, 0, 0);
+  if (retval >= 0) {
+    _syscall(SYSCALL_EXIT, (uintptr_t)retval, 0, 0);  
+  }
 }
 
 
