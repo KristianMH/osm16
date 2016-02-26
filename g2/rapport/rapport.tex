@@ -1,0 +1,84 @@
+\documentclass[12pt]{article}
+\usepackage[a4paper, hmargin={2.8cm, 2.8cm}, vmargin={2.5cm, 2.5cm}]{geometry}
+\usepackage{eso-pic} % \AddToShipoutPicture
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[english]{babel}
+\usepackage{cite}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{enumerate}
+\usepackage{mathrsfs}
+\usepackage{fullpage}
+\usepackage[linkcolor=red]{hyperref}
+\usepackage[final]{graphicx}
+\usepackage{color}
+\usepackage{listings}
+\renewcommand*\lstlistingname{Code Block}
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+
+%caption distinct from normal text
+\usepackage[hang,small,bf]{caption}
+\usepackage{hyperref}
+
+\hypersetup{
+    colorlinks,%
+    citecolor=black,%
+    filecolor=black,%
+    linkcolor=black,%
+    urlcolor=black
+}
+
+\author{
+  \texttt{Mikkel Enevoldsen} \\[.4cm]
+  \texttt{Kristian Høi} \\[.4cm]
+  \texttt{Simon Van Beest} \\[.4cm]
+  \vspace{8cm}
+}
+
+\title{
+  \vspace{3cm}
+  \Huge{G2} \\[.25cm]
+  \large{Priority queue and syscall read/write}
+  \vspace{.75cm}
+}
+
+\begin{document}
+
+\AddToShipoutPicture*{\put(0,0){\includegraphics*[viewport=0 0 700 600]{includes/ku-farve}}}
+\AddToShipoutPicture*{\put(0,602){\includegraphics*[viewport=0 600 700 1600]{includes/ku-farve}}}
+
+%% Change `ku-en` to `nat-en` to use the `Faculty of Science` header
+\AddToShipoutPicture*{\put(0,0){\includegraphics*{includes/ku-en}}}
+
+\clearpage\maketitle
+\thispagestyle{empty}
+
+\newpage
+
+%\tableofcontents %generate table of content
+
+\thispagestyle{empty}
+
+%\newpage
+\pagestyle{plain}
+\setcounter{page}{1}
+\pagenumbering{arabic}
+
+%A short report where you document your code, discuss different possibilities to solve the tasks, and explain the design decisions made (why you preferred one particular way out of several choices).
+
+\section*{Documentation}
+
+We have defined a data structure process\_control\_block\_t, containing several elements. State, pid, stack\_top, entry\_point, retval and parent. The most interesting one is state, which is of type process\_state\_t. Process\_state\_t is an enumarated type containing the variables RUNNING, FREE, ZOMBIE and WAITING. The advantage of this design choice is that we won't have to update each variable. Instead we set one of them, and the rest is automatically set to 0.\\ 
+The stack\_top and entry\_point is used for our child processes. It is urged that we consider what to do with child processes of exited processes. We would call exit on each child process recursively. We idintify wich child processes to exit, using the pointer from the child process to its parent. This should work with multiple trheads.\\\\
+In the library of helper functions we implimented what was stated in the assignment text, as well as three other helper functions: find\_pid, find\_waiting and wake\_waiting. find\_pid is straight forward. It returns the id of a process. find\_waiting and wake\_waiting finds all processes waiting for a resource and wakes them respectively. These two functions are mostly on a conceptual level, since we can't really test them as procces\_exit and process\_join isn't working.
+\\\\
+As we test the syscall, process\_spawn, we come to the conclusion that we are able to spawn multiple processes. However with a bit of uncertainty concerning the testing. The remaining syscalls from task two are implimented, but at this point they aren't functional.
+
+
+
+
+\end{document}
