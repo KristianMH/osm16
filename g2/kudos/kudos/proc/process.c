@@ -183,7 +183,7 @@ int setup_new_process(TID_t thread,
 
   return 0;
 }
-
+/*
 void process_start(const char *executable, const char **argv)
 {
   TID_t my_thread;
@@ -197,8 +197,39 @@ void process_start(const char *executable, const char **argv)
                           &entry_point, &stack_top);
 
   if (ret != 0) {
-    return; /* Something went wrong. */
+    return;  Something went wrong. 
   }
+
+  process_set_pagetable(thread_get_thread_entry(my_thread)->pagetable);
+
+   Initialize the user context. (Status register is handled by
+     thread_goto_userland) 
+  memoryset(&user_context, 0, sizeof(user_context));
+
+  _context_set_ip(&user_context, entry_point);
+  _context_set_sp(&user_context, stack_top);
+
+  thread_goto_userland(&user_context);
+}
+*/
+process_id_t find_pid() {
+  for(int i=0; i < PROCESS_MAX_PROCESSES; i++) {
+    if (process_table[i].state == FREE) {
+      return i;
+    }
+  }
+  return PROCESS_PTABLE_FULL;
+}
+//first code that our newly spawned thread should execute.
+void process_child(process_id_t pid){
+  TID_t my_thread;
+  virtaddr_t entry_point;
+  context_t user_context;
+  virtaddr_t stack_top;
+  // gets the stack and entry from Process table
+  entry_point = process_table[pid].entry_point;
+  stack_top = process_table[pid].stack_top;
+  my_thread = thread_get_current_thread();
 
   process_set_pagetable(thread_get_thread_entry(my_thread)->pagetable);
 
@@ -208,41 +239,37 @@ void process_start(const char *executable, const char **argv)
 
   _context_set_ip(&user_context, entry_point);
   _context_set_sp(&user_context, stack_top);
-
+  kprintf("thread2\n");
+  // goes to userland.
   thread_goto_userland(&user_context);
 }
-
-process_id_t find_pid() {
-  for(int i=0; i < PROCESS_MAX_PROCESSES; i++) {
-    if (process_table[i].state == FREE) {
-      return i;
-    }
-  }
-  return PROCESS_PTABLE_FULL;
-}
-
 process_id_t process_spawn(char const* executable, char const **argv){
   TID_t new_thread;
   virtaddr_t entry_point;
-  process_id_t pid;
-  context_t user_context;
   virtaddr_t stack_top;
+  process_id_t pid;
   process_control_block_t user_process;
   int ret;
   interrupt_status_t int_status;
-  kprintf(executable);
-  kprintf("\n");
   int_status = _interrupt_disable();
   spinlock_acquire(&process_table_slock);
   pid = find_pid();
-  if (pid == PROCESS_PTABLE_FULL) {
+  if ((int)pid == PROCESS_PTABLE_FULL) {
     //release spinloc on error
     kprintf("process_PTABLE_FULL\n");
     spinlock_release(&process_table_slock);
     return -1; /* something went wrong */
   }
-  new_thread = thread_create(NULL, pid);
-  ret = setup_new_process(new_thread, executable, argv,
+  
+  user_process.pid = pid;
+  user_process.parent = process_get_current_process();
+  user_process.stack_top = stack_top;
+  user_process.entry_point = entry_point;
+  user_process.state = RUNNING;
+  process_table[pid] = user_process;
+  new_thread = thread_create(&process_child, pid);
+  TID_t my_thread = thread_get_current_thread();
+  ret = setup_new_process(my_thread, executable, argv,
                               &entry_point, &stack_top);
   if (ret != 0) {
     //release spinloc on error
@@ -250,28 +277,16 @@ process_id_t process_spawn(char const* executable, char const **argv){
     kprintf("setup failed\n");
     return -1; /* Something went wrong. */
   }
+  // everything went well, release spinlock
   
-  user_process.state = RUNNING;
-  user_process.pid = pid;
-  user_process.parent = process_get_current_process();
-  process_set_pagetable(thread_get_thread_entry(new_thread)->pagetable);
-  // everything went well, add block to table and release spinlock
-  process_table[pid] = user_process;
   spinlock_release(&process_table_slock);
   _interrupt_set_state(int_status);
-  /* Initialize the user context. (Status register is handled by
-     thread_goto_userland) */
-  memoryset(&user_context, 0, sizeof(user_context));
-
-  _context_set_ip(&user_context, entry_point);
-  _context_set_sp(&user_context, stack_top);
-
-  
-  thread_goto_userland(&user_context);
-
-  return ret;
+  kprintf("thread 1\n");
+  thread_run(new_thread);
+  kprintf("i ran new thread\n");
+  return pid;
 }
-
+// initalizes the process table 
 void process_init() {
   interrupt_status_t int_status;
   int_status = _interrupt_disable();
@@ -280,14 +295,12 @@ void process_init() {
   spinlock_acquire(&process_table_slock);
   for (int i = 0; i < PROCESS_MAX_PROCESSES; i++) {
     process_table[i].state=FREE;
-    process_table[i].parent = (int)NULL;
     process_table[i].pid = (int)NULL;
-    process_table[i].retval = (int)NULL;
   }
   spinlock_release(&process_table_slock);
   _interrupt_set_state(int_status);
 }
-
+// finds number of waiting threads.
 int find_waiting() {
   int i = 0;
   for (; i < PROCESS_MAX_PROCESSES; i++) {
@@ -297,6 +310,8 @@ int find_waiting() {
   }
   return i;
 }
+// wakes the waiting threads. if no threads is waiting on that resource
+// sleeq_wake does nothing.
 void wake_waiting(process_id_t pid) {
   int n = find_waiting();
   spinlock_acquire(&resource_slock);
@@ -309,6 +324,7 @@ void wake_waiting(process_id_t pid) {
   }
   spinlock_release(&resource_slock);
 }
+// exits the process with the given retval which is saved in process table.
 void process_exit(int retval) {
   thread_table_t *thr;
   interrupt_status_t int_status;
@@ -320,17 +336,21 @@ void process_exit(int retval) {
   // interrupt and spinlock
   int_status = _interrupt_disable();
   spinlock_acquire(&process_table_slock);
+  // wakes process waiting.
   wake_waiting(process_block->pid);
+  //resets the values.
   process_block->retval = retval;
-  process_block->state  = FREE;
+  process_block->state  = ZOMBIE;
   process_block->parent = (int)NULL;
   process_block->pid = (int)NULL;
   spinlock_release(&process_table_slock);
   _interrupt_set_state(int_status);
-
+  // thread suicide.
   thread_finish();
 }
-
+/*
+ * Not implemented correctly we thing.
+ */
 int process_join(process_id_t pid){
   process_control_block_t process_block;
   interrupt_status_t int_status;
@@ -342,7 +362,7 @@ int process_join(process_id_t pid){
   spinlock_release(&process_table_slock);
   // acquire resource lock
   spinlock_acquire(&resource_slock);
-  // waits for process to finish(die?)
+  // waits for process to finish running
   while (process_block.state == RUNNING) {
     sleepq_add(&process_block);
     spinlock_release(&resource_slock);

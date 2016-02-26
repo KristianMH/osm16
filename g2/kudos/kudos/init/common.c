@@ -103,5 +103,5 @@ void init_startup_thread(uint32_t arg)
   process_spawn(bootargs_get("initprog"), NULL);
 
   /* The current process_start() should never return. */
-  KERNEL_PANIC("Run out of initprog.\n");
+  //KERNEL_PANIC("Run out of initprog.\n");
 }

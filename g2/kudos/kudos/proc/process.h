@@ -17,7 +17,7 @@
 #define PROCESS_MAX_PROCESSES  128
 #define PROCESS_MAX_FILES      10
 
-typedef int process_id_t;
+typedef uint32_t process_id_t;
 
 typedef enum {
   RUNNING,
@@ -29,6 +29,8 @@ typedef enum {
 typedef struct {
   process_state_t state;
   process_id_t pid;
+  virtaddr_t stack_top;
+  virtaddr_t entry_point;
   int retval;
   process_id_t parent;
 } process_control_block_t;
