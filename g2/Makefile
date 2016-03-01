@@ -1,4 +1,4 @@
-STUDENTS=graham_knuth_patashnik
+STUDENTS=hoei_beest_enevoldsen
 ASSIGNMENT=2
 VERSION=1
 
