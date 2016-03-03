@@ -17,7 +17,7 @@
 #define PROCESS_MAX_PROCESSES  128
 #define PROCESS_MAX_FILES      10
 
-typedef uint32_t process_id_t;
+typedef int process_id_t;
 
 typedef enum {
   RUNNING,

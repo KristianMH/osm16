@@ -229,17 +229,16 @@ void process_child(process_id_t pid){
   // gets the stack and entry from Process table
   entry_point = process_table[pid].entry_point;
   stack_top = process_table[pid].stack_top;
+  
   my_thread = thread_get_current_thread();
-
+  
   process_set_pagetable(thread_get_thread_entry(my_thread)->pagetable);
   /* Initialize the user context. (Status register is handled by
      thread_goto_userland) */
-  kprintf("thread2\n");
   memoryset(&user_context, 0, sizeof(user_context));
 
   _context_set_ip(&user_context, entry_point);
   _context_set_sp(&user_context, stack_top);
-  kprintf("thread2\n");
   // goes to userland.
   thread_goto_userland(&user_context);
 }
@@ -253,21 +252,21 @@ process_id_t process_spawn(char const* executable, char const **argv){
   interrupt_status_t int_status;
   int_status = _interrupt_disable();
   spinlock_acquire(&process_table_slock);
+  
   pid = find_pid();
-  if ((int)pid == PROCESS_PTABLE_FULL) {
+  if (pid == PROCESS_PTABLE_FULL) {
     //release spinloc on error
     kprintf("process_PTABLE_FULL\n");
     spinlock_release(&process_table_slock);
     return -1; /* something went wrong */
   }
-  
   user_process.pid = pid;
-  user_process.parent = process_get_current_process();
-  user_process.stack_top = stack_top;
   user_process.entry_point = entry_point;
+  user_process.stack_top = stack_top;
+  user_process.parent = process_get_current_process();
   user_process.state = RUNNING;
   process_table[pid] = user_process;
-  new_thread = thread_create(&process_child, pid);
+  new_thread = thread_create((void (*)(uint32_t)) (&process_child), pid);
   ret = setup_new_process(new_thread, executable, argv,
                               &entry_point, &stack_top);
   if (ret != 0) {
@@ -280,7 +279,6 @@ process_id_t process_spawn(char const* executable, char const **argv){
   
   spinlock_release(&process_table_slock);
   _interrupt_set_state(int_status);
-  kprintf("thread 1\n");
   thread_run(new_thread);
   kprintf("i ran new thread\n");
   return pid;
