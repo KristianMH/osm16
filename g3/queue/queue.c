@@ -99,13 +99,9 @@ queue_grow(struct queue *q) {
 
 int
 queue_push(struct queue *q, int pri) {
-  /*int lock_success = pthread_mutex_lock(&q->lock);
-    if (lock_success != 0) {
-    printf("could not lock mutex push \n");
-    return 5;
-    } */
   /* FIXME: Make this function thread-safe. */
-  if (pthread_mutex_trylock(&q->lock)) {
+  while (pthread_mutex_lock(&q->lock) != 0) {
+    printf("someone sleeps in push\n");
     pthread_cond_wait(&q->cond, &q->lock);    
   }
   int retval;
@@ -120,11 +116,8 @@ queue_push(struct queue *q, int pri) {
   queue_heap_up(q->root, q->count);
   q->count++;
   printf("push\n");
-  int unlock_success = pthread_mutex_unlock(&q->lock);
-  if (unlock_success != 0) {
-    printf("Could not unlock");
-    return 5;
-  }
+  pthread_cond_signal(&q->cond);
+  pthread_mutex_unlock(&q->lock);
   return 0;
 }
 
@@ -132,30 +125,23 @@ int
 queue_pop(struct queue *q, int *pri_ptr) {
   /* FIXME: Make this function thread-safe.  Also, if the queue is empty on pop,
      block until something is pushed. */
-  /*  int lock_success = pthread_mutex_lock(&q->lock);
-  if (lock_success != 0) {
-    printf("could not lock mutex pop \n" );
-    } */
-  if (pthread_mutex_trylock(&q->lock)) {
+  while (pthread_mutex_lock(&q->lock) != 0) {
+    printf("someone sleeps in pop\n");
     pthread_cond_wait(&q->cond, &q->lock);
   }
   if (q->count == 0) {
-    //block here
+    printf("nothing to pop, i sleep\n");
     pthread_cond_wait(&q->cond, &q->lock);
-    //return QUEUE_UNDERFLOW;
   }
-  *pri_ptr = q->root->pri;
 
+  *pri_ptr = q->root->pri;
   q->count--;
   q->next--;
   exchange(q->root, q->next);
   queue_heap_down(q->root, q->count, 0);
   printf("pop\n");
-  int unlock_success = pthread_mutex_unlock(&q->lock);
-  if (unlock_success != 0) {
-    printf("Could not unlock");
-    return 5;
-  }
+  pthread_cond_signal(&q->cond);
+  pthread_mutex_unlock(&q->lock);
   return 0;
 }
 
