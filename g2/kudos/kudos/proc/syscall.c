@@ -53,7 +53,7 @@ uintptr_t syscall_entry(uintptr_t syscall,
     return syscall_write((const void*)arg1, (int)arg2);
     break;
   case SYSCALL_SPAWN:
-    return process_spawn((char const*)arg1, (char const**)arg2);
+    return process_spawn((char const*)arg0, (char const**)arg1);
     break;
   case SYSCALL_EXIT:
     process_exit((int)arg1);

@@ -231,7 +231,7 @@ void process_child(process_id_t pid){
   stack_top = process_table[pid].stack_top;
   
   my_thread = thread_get_current_thread();
-  
+
   process_set_pagetable(thread_get_thread_entry(my_thread)->pagetable);
   /* Initialize the user context. (Status register is handled by
      thread_goto_userland) */
@@ -239,6 +239,7 @@ void process_child(process_id_t pid){
 
   _context_set_ip(&user_context, entry_point);
   _context_set_sp(&user_context, stack_top);
+ 
   // goes to userland.
   thread_goto_userland(&user_context);
 }
@@ -252,7 +253,7 @@ process_id_t process_spawn(char const* executable, char const **argv){
   interrupt_status_t int_status;
   int_status = _interrupt_disable();
   spinlock_acquire(&process_table_slock);
-  
+
   pid = find_pid();
   if (pid == PROCESS_PTABLE_FULL) {
     //release spinloc on error
@@ -261,11 +262,7 @@ process_id_t process_spawn(char const* executable, char const **argv){
     return -1; /* something went wrong */
   }
   user_process.pid = pid;
-  user_process.entry_point = entry_point;
-  user_process.stack_top = stack_top;
   user_process.parent = process_get_current_process();
-  user_process.state = RUNNING;
-  process_table[pid] = user_process;
   new_thread = thread_create((void (*)(uint32_t)) (&process_child), pid);
   ret = setup_new_process(new_thread, executable, argv,
                               &entry_point, &stack_top);
@@ -275,6 +272,10 @@ process_id_t process_spawn(char const* executable, char const **argv){
     kprintf("setup failed\n");
     return -1; /* Something went wrong. */
   }
+  user_process.state = RUNNING;  
+  user_process.entry_point = entry_point;
+  user_process.stack_top = stack_top;
+  process_table[pid] = user_process;
   // everything went well, release spinlock
   
   spinlock_release(&process_table_slock);
@@ -312,6 +313,7 @@ void process_exit(int retval) {
   vm_destroy_pagetable(thr->pagetable);
   thr->pagetable = NULL;
   sleepq_wake_all(&process_table[cur]);
+  kprintf("i woke ppl\n");
   spinlock_release(&process_table_slock);
   _interrupt_set_state(int_status);
   // thread suicide.
@@ -321,26 +323,31 @@ void process_exit(int retval) {
  * Not implemented correctly we thing.
  */
 int process_join(process_id_t pid){
-  process_control_block_t process_block;
   interrupt_status_t int_status;
   int ret;
+  if (-1 >= pid && pid >= 256) {
+    kprintf("not valid pid");
+    return -1;
+  }
   int_status = _interrupt_disable();
   // acquire resource from table
-  spinlock_acquire(&process_table_slock);
-  process_block = process_table[pid];
-  spinlock_release(&process_table_slock);
-  // acquire resource lock
+   spinlock_acquire(&process_table_slock);
   spinlock_acquire(&resource_slock);
   // waits for process to finish running
-  while (process_block.state == RUNNING) {
-    sleepq_add(&process_block);
+  while (process_table[pid].state != ZOMBIE) {
+    sleepq_add(&process_table[pid]);
     spinlock_release(&resource_slock);
+    spinlock_release(&process_table_slock);
     thread_switch();
+    kprintf("I try agian\n");
     spinlock_acquire(&resource_slock);
+    //spinlock_acquire(&process_table_slock);
   }
-  ret = process_block.retval;
+  ret = process_table[pid].retval;
   spinlock_release(&resource_slock);
+  spinlock_release(&process_table_slock);
   _interrupt_set_state(int_status);
+  kprintf("i joined\n");
   return ret;
 }
 process_id_t process_get_current_process() {
