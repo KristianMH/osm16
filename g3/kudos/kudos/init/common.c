@@ -24,6 +24,7 @@
 #include "lib/libc.h"
 #include "proc/process.h"
 #include "vm/memory.h"
+#include "proc/usr_sem.h"
 
 /**
  * Fallback function for system startup. This function is executed
@@ -94,9 +95,9 @@ void init_startup_thread(uint32_t arg)
     kprintf("No initial program (initprog), dropping to fallback\n");
     init_startup_fallback();
   }
-
+  usr_sem_init();
   kprintf("Starting initial program '%s'\n", bootargs_get("initprog"));
-
+  
   process_start(bootargs_get("initprog"), NULL);
 
   /* The current process_start() should never return. */

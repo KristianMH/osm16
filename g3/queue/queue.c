@@ -1,5 +1,6 @@
 #include <stdlib.h>
-
+#include <stdio.h>
+#include <pthread.h>
 #include "queue.h"
 
 #define INIT_SIZE       8
@@ -56,14 +57,25 @@ queue_heap_down(struct node *array, size_t count, size_t i) {
 
 int
 queue_init(struct queue *q) {
+  pthread_mutexattr_t attr;
+  pthread_mutexattr_init(&attr);
+  pthread_mutex_t lock;
   /* FIXME: Make this function also initialize the pthread objects. */
-
+  q->lock = lock;
   q->root = (struct node *)malloc(
     sizeof(struct node) * INIT_SIZE);
   q->next = q->root;
   q->count = 0;
   q->size = INIT_SIZE;
-
+  if (pthread_mutex_init(&q->lock, &attr) != 0) {
+    // mutex init failed
+    return 3;
+  }
+  /* if (pthread_cond_init(&q->cond, NULL) != 0) {
+    // cond init failed
+    return 4;
+    }*/
+  
   return 0;
 }
 
@@ -88,20 +100,27 @@ queue_grow(struct queue *q) {
 int
 queue_push(struct queue *q, int pri) {
   /* FIXME: Make this function thread-safe. */
-
+  int lock_success = pthread_mutex_lock(&q->lock);
+  if (lock_success != 0) {
+    printf("could not lock mutex push \n");
+    return 5;
+  }
   int retval;
-
   if (q->count >= q->size) {
     retval = queue_grow(q);
     if (retval != 0) return retval;
   }
-
+  //wake here
   q->next->pri = pri;
   q->next++;
 
   queue_heap_up(q->root, q->count);
   q->count++;
-
+  int unlock_success = pthread_mutex_unlock(&q->lock);
+  if (unlock_success != 0) {
+    printf("Could not unlock");
+    return 5;
+  }
   return 0;
 }
 
@@ -109,8 +128,12 @@ int
 queue_pop(struct queue *q, int *pri_ptr) {
   /* FIXME: Make this function thread-safe.  Also, if the queue is empty on pop,
      block until something is pushed. */
-
+  int lock_success = pthread_mutex_lock(&q->lock);
+  if (lock_success != 0) {
+    printf("could not lock mutex pop \n" );
+  }
   if (q->count == 0) {
+    //block here
     return QUEUE_UNDERFLOW;
   }
   *pri_ptr = q->root->pri;
@@ -120,7 +143,11 @@ queue_pop(struct queue *q, int *pri_ptr) {
 
   exchange(q->root, q->next);
   queue_heap_down(q->root, q->count, 0);
-
+  int unlock_success = pthread_mutex_unlock(&q->lock);
+  if (unlock_success != 0) {
+    printf("Could not unlock");
+    return 5;
+  }
   return 0;
 }
 

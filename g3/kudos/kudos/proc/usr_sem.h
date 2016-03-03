@@ -6,16 +6,13 @@
 #define USR_SEM_MAX_SEMAPHORES 128
 
 #include "lib/libc.h"
-#include "kernel/sleepq.h"
-#include "kernel/spinlock.h"
-#include "kernel/thread.h"
 #include "kernel/interrupt.h"
+#include "kernel/semaphore.h"
 
 typedef struct {
   int init;
   const char* name[20];
-  int value;
-  spinlock_t slock;
+  semaphore_t* kern_sem;
 } usr_sem_t;
 
 // Returns a pointer to a userland semaphore
@@ -30,6 +27,6 @@ int usr_sem_procure(usr_sem_t* sem);
 // vacate the userland semaphore, returns negative number on error
 int usr_sem_vacate(usr_sem_t* sem);
 
-void user_sem_init();
+void usr_sem_init();
 
 #endif

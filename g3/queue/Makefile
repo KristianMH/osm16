@@ -1,4 +1,4 @@
-.PHONY: all clean valgrind quickgrind debug
+.PHONY: all clean valgrind quickgrind debug testfile
 
 CC=gcc
 CFLAGS=-Wall -Werror -Wextra -pedantic -std=c11 -g
@@ -9,11 +9,12 @@ bouncer: queue.o bouncer.c
 	$(CC) $(CFLAGS) -o bouncer queue.o bouncer.c
 
 queue.o: queue.c
-	$(CC) $(CFLAGS) -c queue.c
+	$(CC) $(CFLAGS) -c -pthread queue.c
 
 clean:
 	rm -f *.o
 	rm -f bouncer
+	rm -f queuetest
 
 valgrind: bouncer
 	valgrind --track-origins=yes --leak-check=full ./bouncer
@@ -23,3 +24,6 @@ quickgrind: bouncer
 
 debug: input.txt gdb.script bouncer
 	gdb -q -x gdb.script ./bouncer
+
+testfile: testqueue.c queue.o
+	$(CC) $(CFLAGS) -pthread -o queuetest queue.o testqueue.c
