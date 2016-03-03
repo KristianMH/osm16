@@ -57,24 +57,24 @@ queue_heap_down(struct node *array, size_t count, size_t i) {
 
 int
 queue_init(struct queue *q) {
-  pthread_mutexattr_t attr;
-  pthread_mutexattr_init(&attr);
   pthread_mutex_t lock;
+  pthread_cond_t cond;
   /* FIXME: Make this function also initialize the pthread objects. */
-  q->lock = lock;
   q->root = (struct node *)malloc(
     sizeof(struct node) * INIT_SIZE);
   q->next = q->root;
   q->count = 0;
   q->size = INIT_SIZE;
-  if (pthread_mutex_init(&q->lock, &attr) != 0) {
+  q->lock = lock;
+  q->cond = cond;
+  if (pthread_mutex_init(&q->lock, NULL) != 0) {
     // mutex init failed
     return 3;
   }
-  /* if (pthread_cond_init(&q->cond, NULL) != 0) {
+  if (pthread_cond_init(&q->cond, NULL) != 0) {
     // cond init failed
     return 4;
-    }*/
+  }
   
   return 0;
 }
@@ -99,11 +99,14 @@ queue_grow(struct queue *q) {
 
 int
 queue_push(struct queue *q, int pri) {
-  /* FIXME: Make this function thread-safe. */
-  int lock_success = pthread_mutex_lock(&q->lock);
-  if (lock_success != 0) {
+  /*int lock_success = pthread_mutex_lock(&q->lock);
+    if (lock_success != 0) {
     printf("could not lock mutex push \n");
     return 5;
+    } */
+  /* FIXME: Make this function thread-safe. */
+  if (pthread_mutex_trylock(&q->lock)) {
+    pthread_cond_wait(&q->cond, &q->lock);    
   }
   int retval;
   if (q->count >= q->size) {
@@ -116,6 +119,7 @@ queue_push(struct queue *q, int pri) {
 
   queue_heap_up(q->root, q->count);
   q->count++;
+  printf("push\n");
   int unlock_success = pthread_mutex_unlock(&q->lock);
   if (unlock_success != 0) {
     printf("Could not unlock");
@@ -128,21 +132,25 @@ int
 queue_pop(struct queue *q, int *pri_ptr) {
   /* FIXME: Make this function thread-safe.  Also, if the queue is empty on pop,
      block until something is pushed. */
-  int lock_success = pthread_mutex_lock(&q->lock);
+  /*  int lock_success = pthread_mutex_lock(&q->lock);
   if (lock_success != 0) {
     printf("could not lock mutex pop \n" );
+    } */
+  if (pthread_mutex_trylock(&q->lock)) {
+    pthread_cond_wait(&q->cond, &q->lock);
   }
   if (q->count == 0) {
     //block here
-    return QUEUE_UNDERFLOW;
+    pthread_cond_wait(&q->cond, &q->lock);
+    //return QUEUE_UNDERFLOW;
   }
   *pri_ptr = q->root->pri;
 
   q->count--;
   q->next--;
-
   exchange(q->root, q->next);
   queue_heap_down(q->root, q->count, 0);
+  printf("pop\n");
   int unlock_success = pthread_mutex_unlock(&q->lock);
   if (unlock_success != 0) {
     printf("Could not unlock");

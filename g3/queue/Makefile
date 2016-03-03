@@ -6,10 +6,10 @@ CFLAGS=-Wall -Werror -Wextra -pedantic -std=c11 -g
 all: bouncer
 
 bouncer: queue.o bouncer.c
-	$(CC) $(CFLAGS) -o bouncer queue.o bouncer.c
+	$(CC) $(CFLAGS) -pthread -o bouncer queue.o bouncer.c
 
 queue.o: queue.c
-	$(CC) $(CFLAGS) -c -pthread queue.c
+	$(CC) $(CFLAGS) -pthread -c  queue.c
 
 clean:
 	rm -f *.o
