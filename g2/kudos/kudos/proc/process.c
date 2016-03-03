@@ -232,9 +232,9 @@ void process_child(process_id_t pid){
   my_thread = thread_get_current_thread();
 
   process_set_pagetable(thread_get_thread_entry(my_thread)->pagetable);
-
   /* Initialize the user context. (Status register is handled by
      thread_goto_userland) */
+  kprintf("thread2\n");
   memoryset(&user_context, 0, sizeof(user_context));
 
   _context_set_ip(&user_context, entry_point);
@@ -268,8 +268,7 @@ process_id_t process_spawn(char const* executable, char const **argv){
   user_process.state = RUNNING;
   process_table[pid] = user_process;
   new_thread = thread_create(&process_child, pid);
-  TID_t my_thread = thread_get_current_thread();
-  ret = setup_new_process(my_thread, executable, argv,
+  ret = setup_new_process(new_thread, executable, argv,
                               &entry_point, &stack_top);
   if (ret != 0) {
     //release spinloc on error
@@ -290,8 +289,8 @@ process_id_t process_spawn(char const* executable, char const **argv){
 void process_init() {
   interrupt_status_t int_status;
   int_status = _interrupt_disable();
-  spinlock_reset(&process_table_slock);
   spinlock_reset(&resource_slock);
+  spinlock_reset(&process_table_slock);
   spinlock_acquire(&process_table_slock);
   for (int i = 0; i < PROCESS_MAX_PROCESSES; i++) {
     process_table[i].state=FREE;
@@ -300,49 +299,21 @@ void process_init() {
   spinlock_release(&process_table_slock);
   _interrupt_set_state(int_status);
 }
-// finds number of waiting threads.
-int find_waiting() {
-  int i = 0;
-  for (; i < PROCESS_MAX_PROCESSES; i++) {
-    if (process_table[i].state == WAITING) {
-      i++;
-    }
-  }
-  return i;
-}
-// wakes the waiting threads. if no threads is waiting on that resource
-// sleeq_wake does nothing.
-void wake_waiting(process_id_t pid) {
-  int n = find_waiting();
-  spinlock_acquire(&resource_slock);
-  if (n > 0) {
-    if (n > 1) {
-      sleepq_wake_all(&process_table[pid]);
-    } else {
-      sleepq_wake(&process_table[pid]);
-    }
-  }
-  spinlock_release(&resource_slock);
-}
 // exits the process with the given retval which is saved in process table.
 void process_exit(int retval) {
-  thread_table_t *thr;
+  thread_table_t *thr = thread_get_current_thread_entry();
   interrupt_status_t int_status;
-  process_control_block_t *process_block = process_get_current_process_entry();
-  // given code
-  thr = thread_get_current_thread_entry();
-  vm_destroy_pagetable(thr->pagetable);
-  thr->pagetable = NULL;
+  process_id_t cur = process_get_current_process();
   // interrupt and spinlock
   int_status = _interrupt_disable();
   spinlock_acquire(&process_table_slock);
-  // wakes process waiting.
-  wake_waiting(process_block->pid);
   //resets the values.
-  process_block->retval = retval;
-  process_block->state  = ZOMBIE;
-  process_block->parent = (int)NULL;
-  process_block->pid = (int)NULL;
+  process_table[cur].retval = retval;
+  process_table[cur].state  = ZOMBIE;
+  // given code 
+  vm_destroy_pagetable(thr->pagetable);
+  thr->pagetable = NULL;
+  sleepq_wake_all(&process_table[cur]);
   spinlock_release(&process_table_slock);
   _interrupt_set_state(int_status);
   // thread suicide.

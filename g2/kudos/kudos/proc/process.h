@@ -22,8 +22,7 @@ typedef uint32_t process_id_t;
 typedef enum {
   RUNNING,
   FREE,
-  ZOMBIE,
-  WAITING
+  ZOMBIE
 } process_state_t;
 
 typedef struct {
