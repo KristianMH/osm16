@@ -1,0 +1,82 @@
+\documentclass[12pt]{article}
+\usepackage[a4paper, hmargin={2.8cm, 2.8cm}, vmargin={2.5cm, 2.5cm}]{geometry}
+\usepackage{eso-pic} % \AddToShipoutPicture
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[english]{babel}
+\usepackage{cite}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{enumerate}
+\usepackage{mathrsfs}
+\usepackage{fullpage}
+\usepackage[linkcolor=red]{hyperref}
+\usepackage[final]{graphicx}
+\usepackage{color}
+\usepackage{listings}
+\renewcommand*\lstlistingname{Code Block}
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+
+%caption distinct from normal text
+\usepackage[hang,small,bf]{caption}
+\usepackage{hyperref}
+
+\hypersetup{
+    colorlinks,%
+    citecolor=black,%
+    filecolor=black,%
+    linkcolor=black,%
+    urlcolor=black
+}
+
+\author{
+  \texttt{Mikkel Enevoldsen} \\[.4cm]
+  \texttt{Kristian Høi} \\[.4cm]
+  \texttt{Simon Van Beest} \\[.4cm]
+  \vspace{8cm}
+}
+
+\title{
+  \vspace{3cm}
+  \Huge{G3} \\[.25cm]
+  \large{Userland Semaphores and thread-safe priority queue}
+  \vspace{.75cm}
+}
+
+\begin{document}
+
+\AddToShipoutPicture*{\put(0,0){\includegraphics*[viewport=0 0 700 600]{includes/ku-farve}}}
+\AddToShipoutPicture*{\put(0,602){\includegraphics*[viewport=0 600 700 1600]{includes/ku-farve}}}
+
+%% Change `ku-en` to `nat-en` to use the `Faculty of Science` header
+\AddToShipoutPicture*{\put(0,0){\includegraphics*{includes/ku-en}}}
+
+\clearpage\maketitle
+\thispagestyle{empty}
+
+\newpage
+
+%\tableofcontents %generate table of content
+
+\thispagestyle{empty}
+
+%\newpage
+\pagestyle{plain}
+\setcounter{page}{1}
+\pagenumbering{arabic}
+
+%A short report where you document your code, discuss different possibilities to solve the tasks, and explain the design decisions made (why you preferred one particular way out of several choices).
+
+\section*{Task 1}
+
+\section*{Task 2}
+In making a thread safe priority queue, we used several functions from the pthread library:\\\\ pthread_mutex_init(), pthread_cond_init(), pthread_mutex_lock(), pthread_cond_wait(), pthread_cond_signal(), pthread_mutex_unlock().\\\\
+Ofcourse we start out by initializing our mutex lock and condition variable in queue_init(). Pushing and popping requires a check of the mutex lock. Until the check is succesfull we sleep by calling pthread_cond_wait(). Finally we need to unlock the mutex lock, and signal that the thread has excxited the critical section.
+\subsection*{Testing}
+Testing is done by running make test apropratly in the terminal. The test starts out by running three threads, which all tries to pop. None of them are able to pop, so they get blocked. Next we try to push 10 times. Theese 10 pushes will be interrupted at some point, by threads pushing and popping interchangeably.\\ Comments in the test show the flow of the program, concerning the pushing and popping of threads.
+
+
+\end{document}

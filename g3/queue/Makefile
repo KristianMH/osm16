@@ -25,5 +25,6 @@ quickgrind: bouncer
 debug: input.txt gdb.script bouncer
 	gdb -q -x gdb.script ./bouncer
 
-testfile: testqueue.c queue.o
-	$(CC) $(CFLAGS) -pthread -o queuetest queue.o testqueue.c
+test: queuetest.c queue.o
+	$(CC) $(CFLAGS) -pthread -o queuetest queue.o queuetest.c
+	./queuetest

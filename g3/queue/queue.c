@@ -100,7 +100,8 @@ queue_grow(struct queue *q) {
 int
 queue_push(struct queue *q, int pri) {
   /* FIXME: Make this function thread-safe. */
-  while (pthread_mutex_lock(&q->lock) != 0) {
+  // tries to lock mutex, while this fail thread sleeps.
+  while(pthread_mutex_lock(&q->lock) != 0) {
     printf("someone sleeps in push\n");
     pthread_cond_wait(&q->cond, &q->lock);    
   }
@@ -109,13 +110,14 @@ queue_push(struct queue *q, int pri) {
     retval = queue_grow(q);
     if (retval != 0) return retval;
   }
-  //wake here
+
   q->next->pri = pri;
   q->next++;
 
   queue_heap_up(q->root, q->count);
   q->count++;
   printf("push\n");
+  //wake and unlock mutex
   pthread_cond_signal(&q->cond);
   pthread_mutex_unlock(&q->lock);
   return 0;
@@ -129,7 +131,7 @@ queue_pop(struct queue *q, int *pri_ptr) {
     printf("someone sleeps in pop\n");
     pthread_cond_wait(&q->cond, &q->lock);
   }
-  if (q->count == 0) {
+  while (q->count == 0) {
     printf("nothing to pop, i sleep\n");
     pthread_cond_wait(&q->cond, &q->lock);
   }
