@@ -231,7 +231,8 @@ void process_child(process_id_t pid){
   stack_top = process_table[pid].stack_top;
   
   my_thread = thread_get_current_thread();
-
+  //setup pid into thread
+  thread_get_current_thread_entry()->process_id = pid;
   process_set_pagetable(thread_get_thread_entry(my_thread)->pagetable);
   /* Initialize the user context. (Status register is handled by
      thread_goto_userland) */
@@ -253,7 +254,7 @@ process_id_t process_spawn(char const* executable, char const **argv){
   interrupt_status_t int_status;
   int_status = _interrupt_disable();
   spinlock_acquire(&process_table_slock);
-
+  //find available pid
   pid = find_pid();
   if (pid == PROCESS_PTABLE_FULL) {
     //release spinloc on error
@@ -261,6 +262,7 @@ process_id_t process_spawn(char const* executable, char const **argv){
     spinlock_release(&process_table_slock);
     return -1; /* something went wrong */
   }
+  
   user_process.pid = pid;
   user_process.parent = process_get_current_process();
   new_thread = thread_create((void (*)(uint32_t)) (&process_child), pid);
@@ -281,7 +283,6 @@ process_id_t process_spawn(char const* executable, char const **argv){
   spinlock_release(&process_table_slock);
   _interrupt_set_state(int_status);
   thread_run(new_thread);
-  kprintf("i ran new thread\n");
   return pid;
 }
 // initalizes the process table 
@@ -313,41 +314,41 @@ void process_exit(int retval) {
   vm_destroy_pagetable(thr->pagetable);
   thr->pagetable = NULL;
   sleepq_wake_all(&process_table[cur]);
-  kprintf("i woke ppl\n");
   spinlock_release(&process_table_slock);
   _interrupt_set_state(int_status);
   // thread suicide.
   thread_finish();
 }
 /*
- * Not implemented correctly we thing.
+ * Joins on a zombie process, sleeps while target process is running.
  */
 int process_join(process_id_t pid){
   interrupt_status_t int_status;
   int ret;
+  // check pid. 
   if (-1 >= pid && pid >= 256) {
     kprintf("not valid pid");
     return -1;
   }
   int_status = _interrupt_disable();
-  // acquire resource from table
-   spinlock_acquire(&process_table_slock);
+  // acquire pointer to resource from table
+  spinlock_acquire(&process_table_slock);
+  process_control_block_t * res = &process_table[pid];
+  spinlock_release(&process_table_slock);
   spinlock_acquire(&resource_slock);
   // waits for process to finish running
-  while (process_table[pid].state != ZOMBIE) {
+  while (res->state != ZOMBIE) {
     sleepq_add(&process_table[pid]);
-    spinlock_release(&resource_slock);
-    spinlock_release(&process_table_slock);
+    spinlock_release(&resource_slock);   
     thread_switch();
-    kprintf("I try agian\n");
     spinlock_acquire(&resource_slock);
-    //spinlock_acquire(&process_table_slock);
   }
+  spinlock_acquire(&process_table_slock);
+  //save return value
   ret = process_table[pid].retval;
   spinlock_release(&resource_slock);
   spinlock_release(&process_table_slock);
   _interrupt_set_state(int_status);
-  kprintf("i joined\n");
   return ret;
 }
 process_id_t process_get_current_process() {

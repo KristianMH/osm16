@@ -56,10 +56,10 @@ uintptr_t syscall_entry(uintptr_t syscall,
     return process_spawn((char const*)arg0, (char const**)arg1);
     break;
   case SYSCALL_EXIT:
-    process_exit((int)arg1);
+    process_exit((int)arg0);
     break;
   case SYSCALL_JOIN:
-    return process_join((int)arg1);
+    return process_join((int)arg0);
     break;
   default:
     KERNEL_PANIC("Unhandled system call\n");
