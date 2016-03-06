@@ -1,6 +1,6 @@
 STUDENTS=hoei_beest_enevoldsen
 ASSIGNMENT=2
-VERSION=1
+VERSION=2
 
 TAR_GZ=$(STUDENTS)-G$(ASSIGNMENT)-v$(VERSION).tar.gz
 
