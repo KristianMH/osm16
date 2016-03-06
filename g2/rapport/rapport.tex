@@ -72,13 +72,16 @@
 
 \section*{Documentation}
 
-We have defined a data structure process\_control\_block\_t, containing several elements. State, pid, stack\_top, entry\_point, retval and parent. The most interesting one is state, which is of type process\_state\_t. Process\_state\_t is an enumarated type containing the variables RUNNING, FREE, ZOMBIE and WAITING. The advantage of this design choice is that we won't have to update each variable. Instead we set one of them, and the rest is automatically set to 0.\\ 
-The stack\_top and entry\_point is used for our child processes. It is urged that we consider what to do with child processes of exited processes. We would call exit on each child process recursively. We idintify wich child processes to exit, using the pointer from the child process to its parent. This should work with multiple trheads.\\\\
-In the library of helper functions we implimented what was stated in the assignment text, as well as three other helper functions: find\_pid, find\_waiting and wake\_waiting. find\_pid is straight forward. It returns the id of a process. find\_waiting and wake\_waiting finds all processes waiting for a resource and wakes them respectively. These two functions are mostly on a conceptual level, since we can't really test them as procces\_exit and process\_join isn't working.
-\\\\
-As we test the syscall, process\_spawn, we come to the conclusion that we are able to spawn multiple processes. However with a bit of uncertainty concerning the testing. The remaining syscalls from task two are implimented, but at this point they aren't functional.
-
-
-
+We have defined a data structure process\_control\_block\_t, containing several elements. State, pid, stack\_top, entry\_point, retval and parent. The most interesting one is state, which is of type process\_state\_t. Process\_state\_t is an enumarated type containing the variables RUNNING, FREE, ZOMBIE. The advantage of this design choice is that we won't have to update each variable. Instead we set one of them, and the rest is automatically set to 0.\\ 
+The stack\_top and entry\_point is used for our spawned processes. It is urged that we consider what to do with child processes of exited processes. We would call exit on each child process recursively. We idintify wich child processes to exit, using the pointer from the child process to its parent. This should work with multiple trheads.\\\\
+We introduced a helper function: find\_pid. find\_pid is straight forward. It returns the id of a process.
+\\
+Process\_spawn we create a new thread and setups the process on the new thread. lastly we run thread\_run on the new thread to begin execution.\\
+In process\_exit we save the given return value in the process block and sets the state to zombie. 
+After that we call sleepq\_wake\_all to alert other threads that called process\_join
+\\
+In process\_join we first acquire a pointer to the process block with the given pid. then we check if the pid has died, if not we add the resource to sleepq and call thread\_switch to sleep. When woken we return the return value from the given pid.
+\subsection*{Testing}
+We created a program called ptest, which spawns a new process running the program phello. phello simply prints hello and calls syscall\_exit. After ptest spawned phello it calls syscall\_join and prints the return value, in this case it prints 42. When it successfully joined syscall\_halt is called.
 
 \end{document}

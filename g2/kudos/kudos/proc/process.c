@@ -244,6 +244,7 @@ void process_child(process_id_t pid){
   // goes to userland.
   thread_goto_userland(&user_context);
 }
+// spawns a new process.
 process_id_t process_spawn(char const* executable, char const **argv){
   TID_t new_thread;
   virtaddr_t entry_point;
@@ -336,16 +337,16 @@ int process_join(process_id_t pid){
   process_control_block_t * res = &process_table[pid];
   spinlock_release(&process_table_slock);
   spinlock_acquire(&resource_slock);
-  // waits for process to finish running
+  // waits for process to finish running, sleep meanwhile
   while (res->state != ZOMBIE) {
-    sleepq_add(&process_table[pid]);
+    sleepq_add(res);
     spinlock_release(&resource_slock);   
     thread_switch();
     spinlock_acquire(&resource_slock);
   }
   spinlock_acquire(&process_table_slock);
   //save return value
-  ret = process_table[pid].retval;
+  ret = res->retval;
   spinlock_release(&resource_slock);
   spinlock_release(&process_table_slock);
   _interrupt_set_state(int_status);
