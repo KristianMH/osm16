@@ -1,4 +1,4 @@
-STUDENTS=stallman_gates_bagger
+STUDENTS=Mikkel_Kristian_Simon
 ASSIGNMENT=3
 VERSION=1
 

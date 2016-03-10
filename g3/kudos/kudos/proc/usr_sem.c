@@ -3,6 +3,7 @@
  */
 
 #include "usr_sem.h"
+#include "lib/libc.h"
 
 static spinlock_t usr_sem_table_slock;
 // userland semaphore array
@@ -27,9 +28,12 @@ void usr_sem_init() {
 
 // returns an existing semaphore with same name.
 int compare_sem_name(const char* name) {
+  kprintf(name);
+  kprintf("\n");
   for (int i = 0; i < USR_SEM_MAX_SEMAPHORES; i++) {
-    if (sem_array[i].init == -1 &&
+    if (sem_array[i].init == 0 &&
         stringcmp((const char*)&sem_array[i].name, name) == 0) {
+      kprintf("found a name");
       return i;
     }
   }
@@ -41,24 +45,34 @@ usr_sem_t* usr_sem_open(const char* name, int value) {
   interrupt_status_t intr_status;
   intr_status = _interrupt_disable();
   spinlock_acquire(&usr_sem_table_slock);
+  //char* name1;
   int space = find_sem_space();
   int same_name = compare_sem_name(name);
   usr_sem_t* dummy = &sem_array[space];
-  if (space < 0) {
-    kprintf("no space for sem");
-    return 0;
-  }
+  kprintf("same_name: %d \n", same_name);
   if (value < 0) {
-    if (same_name < 0) {
+    kprintf("hay\n");
+    if (same_name == -1) {
       return NULL;
     }
     return &sem_array[same_name];
   }
   if (value >= 0) {
-    if (same_name > 0) {
+    if (same_name >= 0) {
       return NULL;
     }    
-  }  
+  }
+  if (space < 0) {
+    kprintf("no space for sem");
+    return 0;
+  }
+  /*
+  for (int i = 0; i < 20; i++) {
+    name1[i] = name[i];
+    if (name[i] == '\0') {
+      break;
+    }
+  }*/
   *dummy->name = name;
   dummy->kern_sem = semaphore_create(value);
   dummy->init = 0;
@@ -74,7 +88,6 @@ int usr_sem_destroy(usr_sem_t* sem) {
     return -1;
   }
   sem->init = -1;
-  *sem->name = (const char*)NULL;
   semaphore_destroy(sem->kern_sem);
   return 0;
 }
