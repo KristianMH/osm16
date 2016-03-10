@@ -10,14 +10,14 @@
 #include "vm/memory.h"
 
 void process_set_pagetable(pagetable_t *pagetable)
-{
-  pagetable=pagetable;
+{ 
   //interrupt_status_t intr_status;
 
   /* Put the mapped pages into TLB. Here we assume that the pages fit
      into the TLB. After writing proper TLB exception handling this
      call should be skipped, leaving the function empty. */
-  /*intr_status = _interrupt_disable();
-  tlb_fill(pagetable);
-  _interrupt_set_state(intr_status); */
+  //intr_status = _interrupt_disable();
+  //tlb_fill(pagetable);
+  pagetable = pagetable;
+    //_interrupt_set_state(intr_status); 
 }

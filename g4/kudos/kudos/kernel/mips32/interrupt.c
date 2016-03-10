@@ -166,7 +166,7 @@ void interrupt_handle(virtaddr_t cause) {
        here. See the implementation of tlb_fill on details how to do that.
     */
     //tlb_fill(thread_get_current_thread_entry()->pagetable);
-    _tlb_set_asid(thread_get_current_thread());
+    _tlb_set_asid(thread_get_current_thread_entry()->pagetable->ASID);
   }
 }
 
