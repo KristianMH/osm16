@@ -29,6 +29,7 @@ int main() {
   /* Extend the heap, and check that it worked. */
   if (syscall_memlimit(a_string + STRING_LENGTH) == NULL) {
     /* It didn't work, so exit already. */
+    printf("shit\n");
     return 1;
   }
 

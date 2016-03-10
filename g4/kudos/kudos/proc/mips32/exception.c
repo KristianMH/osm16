@@ -7,6 +7,7 @@
 #include "lib/libc.h"
 #include "kernel/thread.h"
 #include <exception.h>
+#include "vm/mips32/tlb.h"
 
 void syscall_handle(context_t *user_context);
 
@@ -38,13 +39,13 @@ void user_exception_handle(int exception)
 
   switch(exception) {
   case EXCEPTION_TLBM:
-    KERNEL_PANIC("TLB Modification: not handled yet");
+    tlb_modified_exception(1);
     break;
   case EXCEPTION_TLBL:
-    KERNEL_PANIC("TLB Load: not handled yet");
+    tlb_modified_exception(1);
     break;
   case EXCEPTION_TLBS:
-    KERNEL_PANIC("TLB Store: not handled yet");
+    tlb_modified_exception(1);
     break;
   case EXCEPTION_ADDRL:
     KERNEL_PANIC("Address Error Load: not handled yet");

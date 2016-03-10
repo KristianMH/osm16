@@ -7,6 +7,7 @@
 #include <exception.h>
 #include "lib/libc.h"
 #include <tlb.h>
+#include "vm/mips32/tlb.h"
 
 /**
    Prints failed virtual addresses when TLB exception occurs. This
@@ -50,15 +51,15 @@ void kernel_exception_handle(int exception)
   switch(exception) {
   case EXCEPTION_TLBM:
     print_tlb_debug();
-    KERNEL_PANIC("TLB Modification: not handled yet");
+    tlb_modified_exception(0);
     break;
   case EXCEPTION_TLBL:
     print_tlb_debug();
-    KERNEL_PANIC("TLB Load: not handled yet");
+    tlb_load_exception(0);
     break;
   case EXCEPTION_TLBS:
     print_tlb_debug();
-    KERNEL_PANIC("TLB Store: not handled yet");
+    tlb_store_exception(0);
     break;
   case EXCEPTION_ADDRL:
     print_tlb_debug();
