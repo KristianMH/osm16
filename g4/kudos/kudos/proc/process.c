@@ -224,7 +224,7 @@ int setup_new_process(TID_t thread,
 void process_run(process_id_t pid)
 {
   context_t user_context;
-
+  
   thread_table_t *my_thread = thread_get_current_thread_entry();
 
   /* If my process is a zombie, that means initialisation failed. */

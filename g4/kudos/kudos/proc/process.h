@@ -39,6 +39,8 @@ typedef struct {
   virtaddr_t entry_point;
   virtaddr_t stack_top;
 
+  virtaddr_t heap_end;
+  
 } process_control_block_t;
 
 

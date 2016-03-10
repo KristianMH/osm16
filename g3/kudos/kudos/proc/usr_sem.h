@@ -11,7 +11,7 @@
 
 typedef struct {
   int init;
-  const char* name[20];
+  char name[20];
   semaphore_t* kern_sem;
 } usr_sem_t;
 
