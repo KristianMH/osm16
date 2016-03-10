@@ -114,6 +114,9 @@ int setup_new_process(TID_t thread,
     vm_map(pagetable, phys_page,
            (USERLAND_STACK_TOP & PAGE_SIZE_MASK) - i*PAGE_SIZE, 1);
   }
+  // do something heap ish here.(do the mathamatican)
+  process_id_t pid = thread_get_current_thread_entry()->process_id;
+  process_table[pid].heap_end = (void *)((USERLAND_STACK_TOP & PAGE_SIZE_MASK)-i*PAGE_SIZE+1);
 
   /* Allocate and map pages for the segments. We assume that
      segments begin at page boundary. (The linker script in tests

@@ -7,7 +7,6 @@
 #include <exception.h>
 #include "lib/libc.h"
 #include <tlb.h>
-#include "vm/mips32/tlb.h"
 
 /**
    Prints failed virtual addresses when TLB exception occurs. This

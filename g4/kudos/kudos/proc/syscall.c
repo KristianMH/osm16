@@ -10,6 +10,7 @@
 #include "vm/memory.h"
 #include "drivers/polltty.h"
 #include "proc/process.h"
+#include "proc/memlimit.h"
 
 int syscall_write(const char *buffer, int length) {
   /* Not a G1 solution! */
@@ -60,6 +61,9 @@ uintptr_t syscall_entry(uintptr_t syscall,
     break;
   case SYSCALL_JOIN:
     return process_join((process_id_t) arg0);
+    break;
+  case SYSCALL_MEMLIMIT:
+    return (int)memlimit((void*) arg0);
     break;
   default:
     KERNEL_PANIC("Unhandled system call\n");

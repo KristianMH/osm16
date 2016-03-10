@@ -38,6 +38,8 @@ typedef struct {
 /* Initial contents of some registers. */
   virtaddr_t entry_point;
   virtaddr_t stack_top;
+  
+  void *heap_end;
 
 } process_control_block_t;
 
