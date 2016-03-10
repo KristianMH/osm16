@@ -9,7 +9,7 @@
 #include "kernel/config.h"
 #include "vm/memory.h"
 
-void process_set_pagetable(pagetable_t *pagetable)
+void process_set_pagetable()
 { 
   //interrupt_status_t intr_status;
 
@@ -18,6 +18,5 @@ void process_set_pagetable(pagetable_t *pagetable)
      call should be skipped, leaving the function empty. */
   //intr_status = _interrupt_disable();
   //tlb_fill(pagetable);
-  pagetable = pagetable;
-    //_interrupt_set_state(intr_status); 
+  // _interrupt_set_state(intr_status); 
 }

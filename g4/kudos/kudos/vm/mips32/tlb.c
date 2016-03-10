@@ -9,7 +9,7 @@
 #include "kernel/thread.h"
 #include "proc/process.h"
 
-// returns a index if found matching page entry. returns -1 if none found.
+// returns an index if found matching page entry. returns -1 if none found.
 int find_matching_page(tlb_exception_state_t *state) {
   tlb_entry_t *entries = thread_get_current_thread_entry()->pagetable->entries;
   for (int i = 0; i < PAGETABLE_ENTRIES; i++) {
@@ -29,6 +29,7 @@ void tlb_modified_exception(int mode) {
 }
 
 void tlb_load_exception(int mode) {
+  
   tlb_exception_state_t state;
   tlb_entry_t *entry;
   _tlb_get_exception_state(&state);
@@ -70,7 +71,7 @@ void tlb_store_exception(int mode) {
     }
   }
   entry = &thread_get_current_thread_entry()->pagetable->entries[found_page];
-  // checks if dirty bit is set for even or odd pages.
+  // checks if valid bit is set for even or odd pages.
   if ((even && entry->V0) || (!even && entry->V1)) {
     _tlb_write_random(entry);
     return;

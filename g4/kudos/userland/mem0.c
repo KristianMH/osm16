@@ -40,6 +40,5 @@ int main() {
 
   /* Write from the dynamically allocated memory. */
   syscall_write(1, a_string, STRING_LENGTH);
-
   return 0;
 }

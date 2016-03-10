@@ -33,7 +33,6 @@ int compare_sem_name(const char* name) {
   for (int i = 0; i < USR_SEM_MAX_SEMAPHORES; i++) {
     if (sem_array[i].init == 0 &&
         stringcmp((const char*)&sem_array[i].name, name) == 0) {
-      kprintf("found a name");
       return i;
     }
   }
@@ -45,13 +44,10 @@ usr_sem_t* usr_sem_open(const char* name, int value) {
   interrupt_status_t intr_status;
   intr_status = _interrupt_disable();
   spinlock_acquire(&usr_sem_table_slock);
-  //char* name1;
   int space = find_sem_space();
   int same_name = compare_sem_name(name);
-  usr_sem_t* dummy = &sem_array[space];
-  kprintf("same_name: %d \n", same_name);
+  usr_sem_t *dummy = &sem_array[space];
   if (value < 0) {
-    kprintf("hay\n");
     if (same_name == -1) {
       return NULL;
     }
@@ -63,17 +59,11 @@ usr_sem_t* usr_sem_open(const char* name, int value) {
     }    
   }
   if (space < 0) {
-    kprintf("no space for sem");
     return 0;
   }
-  /*
-  for (int i = 0; i < 20; i++) {
-    name1[i] = name[i];
-    if (name[i] == '\0') {
-      break;
-    }
-  }*/
-  *dummy->name = name;
+  
+  stringcopy(dummy->name, name, 20);
+
   dummy->kern_sem = semaphore_create(value);
   dummy->init = 0;
   spinlock_release(&usr_sem_table_slock);

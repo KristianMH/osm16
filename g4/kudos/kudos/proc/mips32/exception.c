@@ -42,10 +42,10 @@ void user_exception_handle(int exception)
     tlb_modified_exception(1);
     break;
   case EXCEPTION_TLBL:
-    tlb_modified_exception(1);
+    tlb_load_exception(1);
     break;
   case EXCEPTION_TLBS:
-    tlb_modified_exception(1);
+    tlb_store_exception(1);
     break;
   case EXCEPTION_ADDRL:
     KERNEL_PANIC("Address Error Load: not handled yet");
