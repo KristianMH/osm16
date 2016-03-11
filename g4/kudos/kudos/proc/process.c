@@ -241,7 +241,7 @@ void process_run(process_id_t pid)
   my_thread->pagetable = my_thread->pagetable;
   //magic heap magic
   process_table[pid].heap_end =
-    (void*)((USERLAND_STACK_TOP & PAGE_SIZE_MASK) - (CONFIG_USERLAND_STACK_SIZE-1)*PAGE_SIZE+1);
+    (void*)((USERLAND_STACK_TOP & PAGE_SIZE_MASK) - CONFIG_USERLAND_STACK_SIZE*PAGE_SIZE);
   /* Initialize the user context. (Status register is handled by
      thread_goto_userland) */
   memoryset(&user_context, 0, sizeof(user_context));
