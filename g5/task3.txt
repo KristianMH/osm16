@@ -1,0 +1,29 @@
+three jobs of length 200 with the SJF and FIFO schedulers.
+FIFO: Turnaround = 200 * 3 = 600     AvgTurnaround = (200 + 400 + 600) / 3 = 400
+SJF:  Turnaround = 200 * 3 = 600     AvgTurnaround = (200 + 400 + 600) / 3 = 400
+
+FIFO: Response time = 0 + 200 + 400 = 600     AVG = 600/3 = 200
+SJF:  Response time = 0 + 200 + 400 = 600     AVG = 600/3 = 200
+
+2. Now do the same but with jobs of different lengths: 100, 200, and       (Depends on arrival in FIFO)
+300. 
+FIFO: Turnaround = 100 + 200 + 300 = 600     AvgTurnaround = (100 + 300 + 600) / 3 = 333,33     <-- Best case
+							   = (300 + 500 + 600) / 3 = 466,66     <-- Worst case
+SJF:  Turnaround = 100 + 200 + 300 = 600     AvgTurnaround = (100 + 300 + 600) / 3 = 333,33
+
+FIFO: Response time = 0 + 100 + 300 = 400    Avg = 400/3 = 	133,33     <-- Best case
+      Response time = 0 + 300 + 500 = 800    Avg = 400/3 = 	266,66     <-- Worst case
+							   
+SJF:  Response time = 0 + 100 + 300 = 400    Avg = 400/3 = 	133,33  
+
+
+3. Now do the same, but also with the RR scheduler and a time-slice
+of 1.
+Response time vil være 3 så længe der er 3 jobs. Altså 0 + 1 + 2 = 3         Avg = 3 / 3 = 1
+
+
+Turnaround: 300 + 500 + 600 = 1400        Avg = 466,66
+
+4. For what types of workloads does SJF deliver the same turnaround
+times as FIFO?
+Hvis alle jobs er af ens længde.
