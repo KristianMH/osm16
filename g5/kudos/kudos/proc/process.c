@@ -349,7 +349,7 @@ void process_exit(int retval)
 int process_close_open_files() {
   int *arr = process_get_current_process_entry()->openfiles;
   int ret_close;
-  for (int i = 0; i < CONFIG_MAX_OPEN_FILES; i++) {
+  for (int i = 0; i < PROCESS_MAX_FILES; i++) {
     if (arr[i] != 0) {
       ret_close = vfs_close(arr[i]);
       if (ret_close != 0) {
@@ -362,7 +362,7 @@ int process_close_open_files() {
 
 int process_find_index(int value) {
   int *arr = process_get_current_process_entry()->openfiles;
-  for (int i = 0; i < CONFIG_MAX_OPEN_FILES; i++) {
+  for (int i = 0; i < PROCESS_MAX_FILES; i++) {
     if (arr[i] == value){
       return i;
     }
@@ -372,7 +372,7 @@ int process_find_index(int value) {
 
 int process_find_free_index() {
   int *arr = process_get_current_process_entry()->openfiles;
-  for (int i = 0; i < CONFIG_MAX_OPEN_FILES; i++) {
+  for (int i = 0; i < PROCESS_MAX_FILES; i++) {
     if (arr[i] == 0) return  i;
   }
   return -1;

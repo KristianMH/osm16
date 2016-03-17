@@ -40,7 +40,7 @@ typedef struct {
   virtaddr_t entry_point;
   virtaddr_t stack_top;
 
-  int openfiles[CONFIG_MAX_OPEN_FILES];
+  int openfiles[PROCESS_MAX_FILES];
   int free_index;
 } process_control_block_t;
 
