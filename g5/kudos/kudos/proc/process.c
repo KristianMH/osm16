@@ -235,7 +235,7 @@ void process_run(process_id_t pid)
     }
     thread_finish();
   }
-
+  process_table[pid].free_index = 0;
   process_set_pagetable(my_thread->pagetable);
   my_thread->process_id = pid;
   my_thread->pagetable = my_thread->pagetable;
@@ -339,5 +339,41 @@ void process_exit(int retval)
 
   spinlock_release(&process_table_slock);
   _interrupt_set_state(intr_status);
+  int ret = process_close_open_files();
+  if (ret == -1) {
+    KERNEL_PANIC("COULD NOT CLOSE FILES IN PROCCESS_EXIT!!");
+  }
   thread_finish();
+}
+
+int process_close_open_files() {
+  int *arr = process_get_current_process_entry()->openfiles;
+  int ret_close;
+  for (int i = 0; i < CONFIG_MAX_OPEN_FILES; i++) {
+    if (arr[i] != 0) {
+      ret_close = vfs_close(arr[i]);
+      if (ret_close != 0) {
+        return -1;
+      }
+    }
+  }
+  return 0;
+}
+
+int process_find_index(int value) {
+  int *arr = process_get_current_process_entry()->openfiles;
+  for (int i = 0; i < CONFIG_MAX_OPEN_FILES; i++) {
+    if (arr[i] == value){
+      return i;
+    }
+  }
+  return -1;
+}
+
+int process_find_free_index() {
+  int *arr = process_get_current_process_entry()->openfiles;
+  for (int i = 0; i < CONFIG_MAX_OPEN_FILES; i++) {
+    if (arr[i] == 0) return  i;
+  }
+  return -1;
 }
