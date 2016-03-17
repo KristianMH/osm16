@@ -18,7 +18,7 @@ int main() {
     heap_end[i] = test_string[i];
   }
 
-  /*Locating updated heap end
+  /* Locating updated heap end */
   heap_end = syscall_memlimit(NULL);
 
   if (syscall_memlimit(heap_end + test_string_length_1) == NULL) {
@@ -28,7 +28,7 @@ int main() {
 
   for (int i = 0; i < test_string_length_1; i++) {
     heap_end[i] = test_string_1[i];
-    }*/
+    }
 
   syscall_write(1, heap_end, test_string_length);
   return 0;
