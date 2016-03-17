@@ -17,11 +17,11 @@ int main() {
   for (int i = 0; i < test_string_length; i++) {
     heap_end[i] = test_string[i];
   }
-
+  syscall_write(1, heap_end, test_string_length);
   /* Locating updated heap end */
   heap_end = syscall_memlimit(NULL);
 
-  if (syscall_memlimit(heap_end + test_string_length_1) == NULL) {
+  if (syscall_memlimit(heap_end + test_string_length_1*4096) == NULL) {
     printf("ERROR from memlimit");
     return 1;
   }
@@ -30,7 +30,7 @@ int main() {
     heap_end[i] = test_string_1[i];
     }
 
-  syscall_write(1, heap_end, test_string_length);
+  syscall_write(1, heap_end, test_string_length_1);
   return 0;
   
 }

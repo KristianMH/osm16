@@ -219,7 +219,12 @@ int setup_new_process(TID_t thread,
   *stack_top = argv_elem_dst - sizeof(int) - sizeof(virtaddr_t);
   
   //magic heap magic
-  process_table[pid].heap_end = (void*) (elf.rw_vaddr + elf.rw_size);
+  int heap_end = elf.rw_vaddr + elf.rw_size;
+  /* if((heap_end % 4096) == 0){ */
+  /*   physmem_allocblock(); */
+  /*   vm_map(pagetable, phys_page, heap_end, 1); */
+  /* } */
+  process_table[pid].heap_end = (void*) heap_end;
   return 0;
 }
 
