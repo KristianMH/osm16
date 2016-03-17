@@ -1,0 +1,98 @@
+\documentclass[12pt]{article}
+\usepackage[a4paper, hmargin={2.8cm, 2.8cm}, vmargin={2.5cm, 2.5cm}]{geometry}
+\usepackage{eso-pic} % \AddToShipoutPicture
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[english]{babel}
+\usepackage{cite}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{enumerate}
+\usepackage{mathrsfs}
+\usepackage{fullpage}
+\usepackage[linkcolor=red]{hyperref}
+\usepackage[final]{graphicx}
+\usepackage{color}
+\usepackage{listings}
+\renewcommand*\lstlistingname{Code Block}
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+
+%caption distinct from normal text
+\usepackage[hang,small,bf]{caption}
+\usepackage{hyperref}
+
+\hypersetup{
+    colorlinks,%
+    citecolor=black,%
+    filecolor=black,%
+    linkcolor=black,%
+    urlcolor=black
+}
+
+\author{
+  \texttt{Mikkel Enevoldsen} \\[.4cm]
+  \texttt{Kristian Høi} \\[.4cm]
+  \texttt{Simon Van Beest} \\[.4cm]
+  \vspace{8cm}
+}
+
+\title{
+  \vspace{3cm}
+  \Huge{G3} \\[.25cm]
+  \large{Userland Semaphores and thread-safe priority queue}
+  \vspace{.75cm}
+}
+
+\begin{document}
+
+\AddToShipoutPicture*{\put(0,0){\includegraphics*[viewport=0 0 700 600]{includes/ku-farve}}}
+\AddToShipoutPicture*{\put(0,602){\includegraphics*[viewport=0 600 700 1600]{includes/ku-farve}}}
+
+%% Change `ku-en` to `nat-en` to use the `Faculty of Science` header
+\AddToShipoutPicture*{\put(0,0){\includegraphics*{includes/ku-en}}}
+
+\clearpage\maketitle
+\thispagestyle{empty}
+
+\newpage
+
+%\tableofcontents %generate table of content
+
+\thispagestyle{empty}
+
+%\newpage
+\pagestyle{plain}
+\setcounter{page}{1}
+\pagenumbering{arabic}
+
+%A short report where you document your code, discuss different possibilities to solve the tasks, and explain the design decisions made (why you preferred one particular way out of several choices).
+
+\section*{Task 1}
+\subsection*{Implementation}
+Our user semaphore structure contains the following entries. int init which keeps track of if the semaphore is used. const char *name which is the name and the identifier of the semaphore.
+kern\_sem whihc is a pointer to a kernel semaphore type.\\
+We call usr\_sem\_init in init/common.c to make sure that we initalize the user semaphore array. usr\_sem\_init runs through the array and resets every semaphore.\\
+in order to support usr\_sem\_open we created two helper functions, compare\_sem\_name and find\_sem\_space. \\Compare\_sem\_name checks if there is a semaphore with same name and returns the index of the array, returns -1 if no matches were found. \\Find\_sem\_space find a available space in semaphore array and returns the index. returns -1 if array is full.\\
+ In usr\_sem\_open we first check if there is a semaphore with same name. In that case we return either NULL or a pointer to the semaphore based on the value given.\\
+ Then we check if there is space available in the semaphore array, we return 0.\\
+ if all checks were false, we create the new semaphore by using the semaphore\_create to create a kernel semaphore, at the index with the given name and value and returns a pointer.\\
+In usr\_sem\_destroy we first check if the value of semaphore is below zero. In that case there are threads blocking on the semaphore. in that case we return -1 as a error.\\
+If no threads are blocking we set the init to -1 to make space available and call semaphore\_destroy.\\
+usr\_sem\_vacate we simply just call the kernel vacate function semaphore\_V with the pointer to the kernel semaphore, same goes for usr\_sem\_procure.\\
+\subsection*{Testing}
+For testing we created a sem.c that creates a semaphore, spawns a new thread running sem\_w and procures on the semaphore. 
+The thread waits on a sem\_w.c to vacate on that semaphore. sem\_w.c opens the same semaphore and vacates on it.
+\\ Currently not working since theres a error in the way assign the name into the structure in usr\_sem\_open 
+
+\section*{Task 2}
+\subsection*{Implementation}
+In making a thread safe priority queue, we used several functions from the pthread library:\\\\ pthread\_mutex\_init(), pthread\_cond\_init(), pthread\_mutex\_lock(), pthread\_cond\_wait(), pthread\_cond\_signal(), pthread\_mutex\_unlock().\\\\
+Ofcourse we start out by initializing our mutex lock and condition variable in queue\_init(). Pushing and popping requires a check of the mutex lock. Until the check is succesfull we sleep by calling pthread\_cond\_wait(). Finally we need to unlock the mutex lock, and signal that the thread has excxited the critical section.
+\subsection*{Testing}
+Testing is done by running make test apropratly in the terminal. The test starts out by running three threads, which all tries to pop. None of them are able to pop, so they get blocked. Next we try to push 10 times. Theese 10 pushes will be interrupted at some point, by threads pushing and popping interchangeably.\\ Comments in the test show the flow of the program, concerning the pushing and popping of threads.
+
+
+\end{document}
