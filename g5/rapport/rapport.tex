@@ -42,7 +42,7 @@
 \title{
   \vspace{3cm}
   \Huge{G3} \\[.25cm]
-  \large{Userland Semaphores and thread-safe priority queue}
+  \large{System calls for the KUDOS filesystem}
   \vspace{.75cm}
 }
 
@@ -72,11 +72,40 @@
 
 \section*{Task 1}
 \subsection*{Implementation}
+\textbf{Syscall\_read}\\
+In syscall we read we first check if the filehandle and length is valid. If the user tries to "shoot the kernel" we throw kernel panic.\\
+If the filehandle is zero we use the gcd device to read from STDIN and returns the bytes read.\\
+Before calling vfs\_read with a offset of minus 2, we check if the process has opened the filehandle, if not error is returned. Lastly we call vfs\_read and return its value. \\
+same goes for syscall\_write except we call vfs\_write.\\
+\textbf{Syscall\_open}\\
+We call vfs\_open. then we add the filehandle to the process list of open files. The filehandle returned by vfs\_open is off by 2, so we add 2. The index is saved at a free spot in the list. If list is full, error is returned. If everything went well, the filehandle is returned.\\
+\textbf{Syscall\_close}\\
+In sycall\_close we firstly validate the filehandle by checking if it is above 2 and the process file list contains the given filehandle. \\
+Then we call vfs\_close and resets the index in the process files list.\\
+\textbf{Syscall\_create}\\
+In the syscall create we checks the parameters givens and call vfs\_create.
+sames goes for syscall\_delete, syscall\_seek, syscall\_filecount, syscall\_file.\\
+
+Inorder to support process files list we added a int list with size defined of PROCESS\_MAX\_FILES we made 3 helper functions in process.c.\\
+Find\_free\_index() which findes a free spot in the file list.\\
+Find\_index() which finds the index of a given value.\\
+Close\_open\_files() which are called in process\_exit() to close all open files.
 
 \subsection*{Testing}
-
+We created a test file test.c, which contains calls the all syscalls.\\
 \section*{Task 2}
-
+\begin{enumerate}
+  \item 4MB: BAT requires 2 blocks\\
+    16 MB: 8 blocks \\
+    512 MB : 256 blocks \\
+    2 GB : 1024 blocks \\
+  \item no, we can not fully utlize the volume, because the maximum amount of files are 25 and the maximum file size is 65024. Thus we can only use: $25 \cdot 65024\ b$ = $1.62 MB$.\\
+  \item The optimal number blocks is the maximum amount of blocks for files times number    
+  of  files + number of filename blocks + MD + BAT + headerblock this gives \\
+  $25\cdot127 + 25 + 2 \ = 3203$
+  \item If the last word of the fileheader block is a pointer then a file consists of 126 + 127 blocks. Thus the maximal filesize is : $(126+127)\cdot512 = 129.53$ Kb
+  \item The double-indirect pointer adds $127^2$ new blocks. the indirect block adds another 127 blocks. The max filesize is then: $(127+127^2+125)\cdot 512b = 8.38 $ Mb
+\end{enumerate}
 
 \section*{Task 3}
 1. Three jobs of length 200 with the SJF and FIFO schedulers.\\
@@ -95,23 +124,24 @@ $$Response time = 0 + 200 + 400 = 600$$     $$AVG = 600/3 = 200$$\\
 
 \noindent FIFO: 
 $$Turnaround = 100 + 200 + 300 = 600$$     $$AvgTurnaround = (100 + 300 + 600) / 3 = 333,33     \leftarrow Best case$$
-							   $$= (300 + 500 + 600) / 3 = 466,66     \leftarrow Worst case$$\\
+							   $$= (300 + 500 + 600) / 3 = 466,66     \leftarrow Worst case$$
 
 \noindent SJF:
-$$Turnaround = 100 + 200 + 300 = 600$$     $$AvgTurnaround = (100 + 300 + 600) / 3 = 333,33$$\\
+$$Turnaround = 100 + 200 + 300 = 600$$     $$AvgTurnaround = (100 + 300 + 600) / 3 = 333,33$$
 
 \noindent FIFO: 
-$$Response time = 0 + 100 + 300 = 400$$    $$Avg = 400/3 = 	133,33     \leftarrow Best case$$\\
-      $$Response time = 0 + 300 + 500 = 800$$    $$Avg = 400/3 = 	266,66     \leftarrow Worst case$$\\
+$$Response time = 0 + 100 + 300 = 400$$    $$Avg = 400/3 = 	133,33     \leftarrow Best case$$
+      $$Response time = 0 + 300 + 500 = 800$$    $$Avg = 400/3 = 	266,66     \leftarrow Worst case$$
 							   
 \noindent SJF:  
 $$Response time = 0 + 100 + 300 = 400$$    $$Avg = 400/3 = 	133,33$$
 
 
 \noindent 3. Now do the same, but also with the RR scheduler and a time-slice of 1.\\
-Response time vil være 3 så længe der er 3 jobs. Altså 0 + 1 + 2 = 3         $$Avg = 3 / 3 = 1$$\\
+Response time vil være 3 så længe der er 3 jobs. Altså 0 + 1 + 2 = 3         
+$$Avg = 3 / 3 = 1$$
 
-$$Turnaround: 300 + 500 + 600 = 1400$$        $$Avg = 466,66$$\\
+$$Turnaround: 300 + 500 + 600 = 1400$$        $$Avg = 466,66$$
 
 \noindent 4. For what types of workloads does SJF deliver the same turnaround times as FIFO?\\
 Hvis alle jobs er af ens længde.

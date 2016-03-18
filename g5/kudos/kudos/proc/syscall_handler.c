@@ -36,10 +36,6 @@ int syscall_read(int filehandle, void *buffer, int length) {
  }
  
  int ret = vfs_read(filehandle-2, buffer, length);
- if (ret >= 0) {
-   return ret;
- }
- ret = -1;
  return ret;
 }
   
@@ -71,18 +67,15 @@ int syscall_write(int filehandle, const void *buffer, int length) {
   }
   
   int ret = vfs_write(filehandle-2, (void*)buffer, length);
-   if (ret > 0) {
-    return ret;
-  }
-  return -1;
+  return ret;
 }
 
 int syscall_open(const char *pathname) {
+  if (pathname == NULL) return -1;
   int filehandle;
   filehandle = vfs_open((char*)pathname);
-  if (filehandle < 0) {
-    return filehandle;
-  }
+  if (filehandle < 0) return filehandle;
+  
   filehandle = filehandle+2;
   process_control_block_t* block = process_get_current_process_entry();
   block->openfiles[block->free_index] = filehandle;
@@ -99,6 +92,10 @@ int syscall_close(int filehandle) {
   if (filehandle < 3) {
     return VFS_INVALID_PARAMS;
   }
+  int is_in_process_list = process_find_index(filehandle-2);
+  if (is_in_process_list < 0 ) {
+    return -1;
+  }
   ret = vfs_close(filehandle-2);
   int index = process_find_index(filehandle);
   process_get_current_process_entry()->free_index = index;
@@ -114,7 +111,7 @@ int syscall_create(const char *pathname, int size) {
     kprintf("negative size\n");
     return -1;
   }
-
+  if (pathname == NULL) return -1;
   int ret = vfs_create((char *) pathname, size);
   if (ret != VFS_OK ) {
     kprintf("couldnt create file\n");
@@ -124,6 +121,7 @@ int syscall_create(const char *pathname, int size) {
 }
 
 int syscall_delete(const char *pathname) {
+  if (pathname == NULL) return -1;
   int ret =  vfs_remove((char *) pathname);
   return ret;
 }
