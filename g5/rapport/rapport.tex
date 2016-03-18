@@ -72,27 +72,68 @@
 
 \section*{Task 1}
 \subsection*{Implementation}
-Our user semaphore structure contains the following entries. int init which keeps track of if the semaphore is used. const char *name which is the name and the identifier of the semaphore.
-kern\_sem whihc is a pointer to a kernel semaphore type.\\
-We call usr\_sem\_init in init/common.c to make sure that we initalize the user semaphore array. usr\_sem\_init runs through the array and resets every semaphore.\\
-in order to support usr\_sem\_open we created two helper functions, compare\_sem\_name and find\_sem\_space. \\Compare\_sem\_name checks if there is a semaphore with same name and returns the index of the array, returns -1 if no matches were found. \\Find\_sem\_space find a available space in semaphore array and returns the index. returns -1 if array is full.\\
- In usr\_sem\_open we first check if there is a semaphore with same name. In that case we return either NULL or a pointer to the semaphore based on the value given.\\
- Then we check if there is space available in the semaphore array, we return 0.\\
- if all checks were false, we create the new semaphore by using the semaphore\_create to create a kernel semaphore, at the index with the given name and value and returns a pointer.\\
-In usr\_sem\_destroy we first check if the value of semaphore is below zero. In that case there are threads blocking on the semaphore. in that case we return -1 as a error.\\
-If no threads are blocking we set the init to -1 to make space available and call semaphore\_destroy.\\
-usr\_sem\_vacate we simply just call the kernel vacate function semaphore\_V with the pointer to the kernel semaphore, same goes for usr\_sem\_procure.\\
+
 \subsection*{Testing}
-For testing we created a sem.c that creates a semaphore, spawns a new thread running sem\_w and procures on the semaphore. 
-The thread waits on a sem\_w.c to vacate on that semaphore. sem\_w.c opens the same semaphore and vacates on it.
-\\ Currently not working since theres a error in the way assign the name into the structure in usr\_sem\_open 
 
 \section*{Task 2}
-\subsection*{Implementation}
-In making a thread safe priority queue, we used several functions from the pthread library:\\\\ pthread\_mutex\_init(), pthread\_cond\_init(), pthread\_mutex\_lock(), pthread\_cond\_wait(), pthread\_cond\_signal(), pthread\_mutex\_unlock().\\\\
-Ofcourse we start out by initializing our mutex lock and condition variable in queue\_init(). Pushing and popping requires a check of the mutex lock. Until the check is succesfull we sleep by calling pthread\_cond\_wait(). Finally we need to unlock the mutex lock, and signal that the thread has excxited the critical section.
-\subsection*{Testing}
-Testing is done by running make test apropratly in the terminal. The test starts out by running three threads, which all tries to pop. None of them are able to pop, so they get blocked. Next we try to push 10 times. Theese 10 pushes will be interrupted at some point, by threads pushing and popping interchangeably.\\ Comments in the test show the flow of the program, concerning the pushing and popping of threads.
 
+
+\section*{Task 3}
+1. Three jobs of length 200 with the SJF and FIFO schedulers.\\
+
+\noindent FIFO:
+$$Turnaround = 200 * 3 = 600$$ $$AvgTurnaround = (200 + 400 + 600) / 3 = 400$$\\
+\noindent SJF:
+$$Turnaround = 200 * 3 = 600$$     $$AvgTurnaround = (200 + 400 + 600) / 3 = 400$$\\
+
+\noindent FIFO:
+$$Response time = 0 + 200 + 400 = 600$$     $$AVG = 600/3 = 200$$\\
+\noindent SJF:
+$$Response time = 0 + 200 + 400 = 600$$     $$AVG = 600/3 = 200$$\\
+
+\noindent 2. Now do the same but with jobs of different lengths: 100, 200, and 300.      (Depends on arrival in FIFO)\\
+
+\noindent FIFO: 
+$$Turnaround = 100 + 200 + 300 = 600$$     $$AvgTurnaround = (100 + 300 + 600) / 3 = 333,33     \leftarrow Best case$$
+							   $$= (300 + 500 + 600) / 3 = 466,66     \leftarrow Worst case$$\\
+
+\noindent SJF:
+$$Turnaround = 100 + 200 + 300 = 600$$     $$AvgTurnaround = (100 + 300 + 600) / 3 = 333,33$$\\
+
+\noindent FIFO: 
+$$Response time = 0 + 100 + 300 = 400$$    $$Avg = 400/3 = 	133,33     \leftarrow Best case$$\\
+      $$Response time = 0 + 300 + 500 = 800$$    $$Avg = 400/3 = 	266,66     \leftarrow Worst case$$\\
+							   
+\noindent SJF:  
+$$Response time = 0 + 100 + 300 = 400$$    $$Avg = 400/3 = 	133,33$$
+
+
+\noindent 3. Now do the same, but also with the RR scheduler and a time-slice of 1.\\
+Response time vil være 3 så længe der er 3 jobs. Altså 0 + 1 + 2 = 3         $$Avg = 3 / 3 = 1$$\\
+
+$$Turnaround: 300 + 500 + 600 = 1400$$        $$Avg = 466,66$$\\
+
+\noindent 4. For what types of workloads does SJF deliver the same turnaround times as FIFO?\\
+Hvis alle jobs er af ens længde.
+
+
+\section*{Task 4}
+
+\begin{tabular}{|c|c|}
+  \hline
+  numpages & time\\
+  \hline
+  2 & 2,78\\
+  4 & 3,06\\
+  8 & 3,16\\
+  16 & 7,12\\
+  32 & 10,92\\
+  64 & 12,07\\
+  128 & 11,99\\
+  256 & 12,42\\
+  512 & 14,16\\
+  1024 & 15,29\\
+  \hline
+\end{tabular}
 
 \end{document}
