@@ -12,7 +12,8 @@
 // returns an index if found matching page entry. returns -1 if none found.
 int find_matching_page(tlb_exception_state_t *state) {
   tlb_entry_t *entries = thread_get_current_thread_entry()->pagetable->entries;
-  for (int i = 0; i < PAGETABLE_ENTRIES; i++) {
+  uint32_t count = thread_get_current_thread_entry()->pagetable->valid_count;
+  for (int i = 0; i < (int)count; i++) {
     if (entries[i].VPN2 == state->badvpn2) {
       return i;
     }
@@ -28,8 +29,8 @@ void tlb_modified_exception(int mode) {
   }
 }
 
-void tlb_load_exception(int mode) {
-  
+void tlb_load_store_exception(int mode) {
+    
   tlb_exception_state_t state;
   tlb_entry_t *entry;
   _tlb_get_exception_state(&state);
@@ -40,7 +41,7 @@ void tlb_load_exception(int mode) {
     if (mode) {
       process_exit(-1);
     } else {
-      KERNEL_PANIC("TLB LOAD EXCEPTION: Page not found");
+      KERNEL_PANIC("TLB LOAD/STORE EXCEPTION: Page not found");
     }
   }
   entry = &thread_get_current_thread_entry()->pagetable->entries[found_page];
@@ -52,36 +53,15 @@ void tlb_load_exception(int mode) {
   if (mode) {
     process_exit(-1);
   } else {
-    KERNEL_PANIC("TLB load exception: Invalid page");
+    KERNEL_PANIC("TLB LOAD/STORE exception: Invalid page");
   }
+}
+void tlb_load_exception(int mode) {
+  tlb_load_store_exception(mode);
 }
 
 void tlb_store_exception(int mode) {
-  tlb_exception_state_t state;
-  tlb_entry_t *entry;
-  _tlb_get_exception_state(&state);
-  // address on even? used for checking V0 and V1 for even and odd.
-  int even = ADDR_IS_ON_EVEN_PAGE(state.badvaddr);
-  int found_page = find_matching_page(&state);
-  if (found_page < 0) {
-    if (mode) {
-      process_exit(-1);
-    } else {
-      KERNEL_PANIC("TLB STORE EXCEPTION: Page not found");
-    }
-  }
-  entry = &thread_get_current_thread_entry()->pagetable->entries[found_page];
-  // checks if valid bit is set for even or odd pages.
-  if ((even && entry->V0) || (!even && entry->V1)) {
-    _tlb_write_random(entry);
-    return;
-  }
-  // if 1 then it is a user thread.
-  if (mode) {
-    process_exit(-1);
-  } else {
-    KERNEL_PANIC("TLB STORE exception: Invalid page");
-  }
+  tlb_load_store_exception(mode);
 }
 
 /**

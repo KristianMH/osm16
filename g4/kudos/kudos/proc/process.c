@@ -67,7 +67,7 @@ process_id_t alloc_process_id()
 /* Return non-zero on error. */
 int setup_new_process(TID_t thread,
                       const char *executable, const char **argv_src,
-                      virtaddr_t *entry_point, virtaddr_t *stack_top)
+                      virtaddr_t *entry_point, virtaddr_t *stack_top, process_id_t pid)
 {
   pagetable_t *pagetable;
   elf_info_t elf;
@@ -217,7 +217,14 @@ int setup_new_process(TID_t thread,
 
   /* Stack pointer points at argv. */
   *stack_top = argv_elem_dst - sizeof(int) - sizeof(virtaddr_t);
-
+  
+  //magic heap magic
+  int heap_end = elf.rw_vaddr + elf.rw_size;
+  /* if((heap_end % 4096) == 0){ */
+  /*   physmem_allocblock(); */
+  /*   vm_map(pagetable, phys_page, heap_end, 1); */
+  /* } */
+  process_table[pid].heap_end = (void*) heap_end;
   return 0;
 }
 
@@ -239,9 +246,7 @@ void process_run(process_id_t pid)
   //process_set_pagetable(my_thread->pagetable);
   my_thread->process_id = pid;
   my_thread->pagetable = my_thread->pagetable;
-  //magic heap magic
-  process_table[pid].heap_end =
-    (void*)((USERLAND_STACK_TOP & PAGE_SIZE_MASK) - CONFIG_USERLAND_STACK_SIZE*PAGE_SIZE);
+;
   /* Initialize the user context. (Status register is handled by
      thread_goto_userland) */
   memoryset(&user_context, 0, sizeof(user_context));
@@ -267,7 +272,7 @@ process_id_t process_spawn(const char *executable, const char **argv)
   thread = thread_create((void (*)(uint32_t))(&process_run), pid);
   ret = setup_new_process(thread, executable, argv,
                           &process_table[pid].entry_point,
-                          &process_table[pid].stack_top);
+                          &process_table[pid].stack_top, pid);
 
   if (ret != 0) {
     process_table[pid].state = PROCESS_ZOMBIE;

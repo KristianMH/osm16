@@ -7,6 +7,7 @@
 
 #include "lib/types.h"
 #include "vm/memory.h"
+#include "kernel/config.h"
 
 #define PROCESS_PTABLE_FULL  -1
 #define PROCESS_ILLEGAL_JOIN -2
@@ -39,8 +40,17 @@ typedef struct {
   virtaddr_t entry_point;
   virtaddr_t stack_top;
 
+  int openfiles[PROCESS_MAX_FILES];
+  int free_index;
 } process_control_block_t;
 
+/* find a free index in openfiles table */
+int process_find_free_index();
+/* finds the index of the filehandle in openfiles table  */
+int process_find_index(int value);
+
+/* closes all openfiles from openfiles table */
+int process_close_open_files();
 
 /* Load and run the executable as a new process in a new thread
    Argument: executable file name; Returns: process ID of the new process */
