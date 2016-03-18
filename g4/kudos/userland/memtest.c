@@ -21,7 +21,7 @@ int main() {
   /* Locating updated heap end */
   heap_end = syscall_memlimit(NULL);
 
-  if (syscall_memlimit(heap_end + test_string_length_1*4096) == NULL) {
+  if (syscall_memlimit(heap_end + test_string_length_1+3807) == NULL) {
     printf("ERROR from memlimit");
     return 1;
   }

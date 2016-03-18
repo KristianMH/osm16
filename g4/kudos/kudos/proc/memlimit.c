@@ -15,7 +15,15 @@ void *memlimit(void* new_end) {
     return NULL;
   }
   pagetable_t *table = thread_get_current_thread_entry()->pagetable;
-  int pages = ((char*)new_end - (char*)old_end)/PAGE_SIZE;
+  int diff = (int)new_end - (int)old_end;
+  int pages = diff/PAGE_SIZE;
+  int left_on_page = 4096 - (int)old_end % PAGE_SIZE;
+ 
+  // attempt to reduce internal fragementaion.
+  if (diff < left_on_page) {
+    process_get_current_process_entry()->heap_end = new_end;
+    return new_end;
+  }
   for (int i = 0; i < pages; i++) {
     int vaddr = (int)old_end + PAGE_SIZE*(i+1);
     phys_page = physmem_allocblock();
