@@ -46,7 +46,6 @@ int main(void) {
     printf("syscall_write to stdin seems to succeed!? %d\n", retval);
     syscall_halt();
   }
-  printf("fails here\n");
   retval = syscall_write(42, to_file, sizeof(to_file) - 1);
   if (retval != -1) {
     printf("syscall_write to handle 42 seems to succeed!? %d\n", retval);

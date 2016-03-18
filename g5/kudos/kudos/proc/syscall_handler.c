@@ -30,6 +30,12 @@ int syscall_read(int filehandle, void *buffer, int length) {
    int read = gcd->read(gcd, buffer, length);
    return read;
  }
+ int is_in_process_list = process_find_index(filehandle);
+ if (is_in_process_list < 0 ) {
+   kprintf("File is not open \n");
+   return -1;
+ }
+ 
  int ret = vfs_read(filehandle-2, buffer, length);
  if (ret >= 0) {
    return ret;
@@ -58,6 +64,13 @@ int syscall_write(int filehandle, const void *buffer, int length) {
     int written = gcd->write(gcd, buffer, length);
     return written;
   }
+  
+  int is_in_process_list = process_find_index(filehandle-2);
+  if (is_in_process_list < 0 ) {
+    kprintf("File is not open \n");
+    return -1;
+  }
+  
   int ret = vfs_write(filehandle-2, (void*)buffer, length);
    if (ret > 0) {
     return ret;

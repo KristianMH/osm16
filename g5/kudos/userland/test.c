@@ -17,7 +17,7 @@ int main() {
   if (ret <= 0) {
     printf("couldn't read from lib.c file\n");
     syscall_halt();
-  }
+    } 
   ret = syscall_open("[disk]test.c");
   if (ret != 5) {
     printf("open rw.c failed\n expected 5 got: %d \n",ret);
@@ -79,10 +79,13 @@ int main() {
     syscall_halt();
   }
   /* ret = syscall_filecount("[disk]"); */
-  /* //tba */
-  /* ret = syscall_file("[disk]", 0, (char*)&buffer); */
-  /* //tba */
-
+  /* ret = syscall_file("[disk]", 0, (char*)&buffer);
+  if (ret != 0) {
+    printf("syscall_file failed \n");
+    syscall_halt();
+  }
+  printf(buffer);
+  */
   printf("Testing went fine, shutting down\n");
   syscall_halt();
   return 0;
