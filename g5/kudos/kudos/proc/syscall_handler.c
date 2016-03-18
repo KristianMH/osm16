@@ -32,7 +32,6 @@ int syscall_read(int filehandle, void *buffer, int length) {
  }
  int is_in_process_list = process_find_index(filehandle);
  if (is_in_process_list < 0 ) {
-   kprintf("File is not open \n");
    return -1;
  }
  
