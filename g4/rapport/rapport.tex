@@ -83,7 +83,10 @@ Testing here is not straight forward. We expect the exceptionhandlers to be work
 
 \section*{Task 2}
 \subsection*{Implementation}
-In implementing 'memlimit' we first check if the argument 'new\_end' is NULL. If it is we return the 'old\_end'. If the 'new\_end' is lower than the 'old\_end' we return NULL. If both these tests fail, we allocate memory for the physical page, maps the virtual memory to the physical page and then updates the heap end. Finally we return the new heap end.
+The heap pointer is set in setup\_new\_process in process.c. We place the heap pointer after elf.size and elf.vaddr
+In implementing 'memlimit' we first check if the argument 'new\_end' is NULL. If it is we return the 'old\_end'. If the 'new\_end' is lower than the 'old\_end' we return NULL. \\
+First we check if there is space enough for the requested memory on the current page, if so we just return the new heap pointer.\\
+If we have to allocate more space we create a while loop that continuously allocated space for a new page. it will run until the remaining difference is less that a page size, then new heap pointer is returned.
 \subsection*{Testing}
-The 'mem0.c' test seems to be working as expected, eventhough we doubt that the implementation om dynamic memory alocation is complete. This doubt comes from our own test 'testmem.c', which allocates memory, writes to that memory, updates the heap end, allocates more memory, writes to that memory and finally tries to print it to the terminal. This should work, but gives an error councerning re-mapping.
+The 'mem0.c' test works as expected, eventhough we doubt that the implementation om dynamic memory alocation is complete. Testmem.c, which allocates memory, writes to that memory, updates the heap end, allocates more memory, writes to that memory and finally tries to print it to the terminal.
 \end{document}
