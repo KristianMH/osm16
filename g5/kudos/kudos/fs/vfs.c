@@ -858,99 +858,99 @@ int vfs_getfree(char *filesystem)
 
 int vfs_filecount(char *pathname)
 {
-    char volumename[VFS_NAME_LENGTH];
-    char dirname[VFS_NAME_LENGTH];
-    fs_t *fs = NULL;
-    int ret;
+  char volumename[VFS_NAME_LENGTH];
+  char dirname[VFS_NAME_LENGTH];
+  fs_t *fs = NULL;
+  int ret;
 
-    if (vfs_start_op() != VFS_OK)
-        return VFS_UNUSABLE;
+  if (vfs_start_op() != VFS_OK)
+    return VFS_UNUSABLE;
 
-     if (pathname == NULL) {
-         semaphore_P(vfs_table.sem);
-         for (ret = 0; ret < CONFIG_MAX_FILESYSTEMS; ret++) {
-             if (vfs_table.filesystems[ret].filesystem == NULL)
-                 break;
-         }
-         semaphore_V(vfs_table.sem);
-         vfs_end_op();
-         return ret;
-     }
-
-    if (vfs_parse_pathname(pathname, volumename, dirname) != VFS_OK) {
-        vfs_end_op();
-        return VFS_ERROR;
-    }
-
+  if (pathname == NULL) {
     semaphore_P(vfs_table.sem);
-
-    fs = vfs_get_filesystem(volumename);
-
-    if(fs == NULL) {
-        semaphore_V(vfs_table.sem);
-        vfs_end_op();
-        return VFS_NO_SUCH_FS;
+    for (ret = 0; ret < CONFIG_MAX_FILESYSTEMS; ret++) {
+      if (vfs_table.filesystems[ret].filesystem == NULL)
+        break;
     }
-
-    ret = fs->filecount(fs, dirname);
-
     semaphore_V(vfs_table.sem);
-
     vfs_end_op();
     return ret;
+  }
+
+  if (vfs_parse_pathname(pathname, volumename, dirname) != VFS_OK) {
+    vfs_end_op();
+    return VFS_ERROR;
+  }
+
+  semaphore_P(vfs_table.sem);
+
+  fs = vfs_get_filesystem(volumename);
+
+  if(fs == NULL) {
+    semaphore_V(vfs_table.sem);
+    vfs_end_op();
+    return VFS_NO_SUCH_FS;
+  }
+
+  ret = fs->filecount(fs, dirname);
+
+  semaphore_V(vfs_table.sem);
+
+  vfs_end_op();
+  return ret;
 }
 
 int vfs_file(char *pathname, int idx, char *buffer)
 {
-    char volumename[VFS_NAME_LENGTH];
-    char dirname[VFS_NAME_LENGTH];
-    fs_t *fs = NULL;
-    int ret;
+  char volumename[VFS_NAME_LENGTH];
+  char dirname[VFS_NAME_LENGTH];
+  fs_t *fs = NULL;
+  int ret;
 
-    if (vfs_start_op() != VFS_OK)
-        return VFS_UNUSABLE;
+  if (vfs_start_op() != VFS_OK)
+    return VFS_UNUSABLE;
 
-    if (pathname == NULL) {
-        semaphore_P(vfs_table.sem);
-        for (ret = 0; ret < CONFIG_MAX_FILESYSTEMS && idx != 0; ret++) {
-            if (vfs_table.filesystems[ret].filesystem != NULL)
-                idx--;
-        }
-        /* Error can be caused if idx was <= 0 or idx was higher than the
-         * number of mounted volumes
-         */
-        if (idx != 0) {
-            semaphore_V(vfs_table.sem);
-            vfs_end_op();
-            return VFS_ERROR;
-        }
-        stringcopy(buffer, vfs_table.filesystems[ret].mountpoint, VFS_NAME_LENGTH);
-        semaphore_V(vfs_table.sem);
-        vfs_end_op();
-        return VFS_OK;
-    }
-
-    if (vfs_parse_pathname(pathname, volumename, dirname) != VFS_OK) {
-        vfs_end_op();
-        return VFS_ERROR;
-    }
-
+  if (pathname == NULL) {
     semaphore_P(vfs_table.sem);
-
-    fs = vfs_get_filesystem(volumename);
-
-    if(fs == NULL) {
-        semaphore_V(vfs_table.sem);
-        vfs_end_op();
-        return VFS_NO_SUCH_FS;
+    for (ret = 0; ret < CONFIG_MAX_FILESYSTEMS && idx != 0; ret++) {
+      if (vfs_table.filesystems[ret].filesystem != NULL)
+        idx--;
     }
-
-    ret = fs->file(fs, dirname, idx, buffer);
-
+    /* Error can be caused if idx was <= 0 or idx was higher than the
+     * number of mounted volumes
+     */
+    if (idx != 0) {
+      semaphore_V(vfs_table.sem);
+      vfs_end_op();
+      return VFS_ERROR;
+    }
+    stringcopy(buffer, vfs_table.filesystems[ret].mountpoint, VFS_NAME_LENGTH);
     semaphore_V(vfs_table.sem);
-
     vfs_end_op();
-    return ret;
+    return VFS_OK;
+  }
+
+  if (vfs_parse_pathname(pathname, volumename, dirname) != VFS_OK) {
+    vfs_end_op();
+    return VFS_ERROR;
+  }
+
+  semaphore_P(vfs_table.sem);
+
+  fs = vfs_get_filesystem(volumename);
+
+  if(fs == NULL) {
+    semaphore_V(vfs_table.sem);
+    vfs_end_op();
+    return VFS_NO_SUCH_FS;
+  }
+
+  ret = fs->file(fs, dirname, idx, buffer);
+
+  semaphore_V(vfs_table.sem);
+
+  vfs_end_op();
+  return ret;
 }
 
 /** @} */

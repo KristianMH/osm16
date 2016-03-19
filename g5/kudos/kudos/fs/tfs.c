@@ -60,7 +60,7 @@ fs_t * tfs_init(gbd_t *disk, uint32_t sector)
   physaddr_t addr;
   gbd_request_t req;
   uint16_t magic;
-  char name[TFS_VOLUMENAME_MAX];
+  char name[TFS_VOLNAME_MAX];
   fs_t *fs;
   tfs_t *tfs;
   int r;
@@ -111,7 +111,7 @@ fs_t * tfs_init(gbd_t *disk, uint32_t sector)
   }
 
   /* Copy volume name from header block. */
-  stringcopy(name, (char *)(addr+4), TFS_VOLUMENAME_MAX);
+  stringcopy(name, (char *)(addr+4), TFS_VOLNAME_MAX);
 
   /* fs_t, tfs_t and all buffers in tfs_t fit in one page, so obtain
      addresses for each structure and buffer inside the allocated
@@ -120,7 +120,7 @@ fs_t * tfs_init(gbd_t *disk, uint32_t sector)
   tfs = (tfs_t *)(addr + sizeof(fs_t));
   tfs->buffer_inode = (tfs_inode_t *)(uintptr_t)((uintptr_t)tfs + sizeof(tfs_t));
   tfs->buffer_bat  = (bitmap_t *)(uintptr_t)((uintptr_t)tfs->buffer_inode +
-                                          TFS_BLOCK_SIZE);
+                                             TFS_BLOCK_SIZE);
   tfs->buffer_md   = (tfs_direntry_t *)((uintptr_t)tfs->buffer_bat +
                                         TFS_BLOCK_SIZE);
 
@@ -806,7 +806,7 @@ int tfs_filecount(fs_t *fs, char *dirname)
   int r;
   int count = 0;
 
-  if (stringcmp(dirname, "") != 0)
+  if (stringcmp(dirname, "/") != 0)
     return VFS_NOT_FOUND;
 
   semaphore_P(tfs->lock);
@@ -842,7 +842,7 @@ int tfs_file(fs_t *fs, char *dirname, int idx, char *buffer)
   int count = 0;
   gbd_request_t req;
 
-  if (stringcmp(dirname, "") != 0 || idx < 0)
+  if (stringcmp(dirname, "/") != 0 || idx < 0)
     return VFS_ERROR;
 
   semaphore_P(tfs->lock);
@@ -852,7 +852,7 @@ int tfs_file(fs_t *fs, char *dirname, int idx, char *buffer)
   req.sem = NULL;
   r = tfs->disk->read_block(tfs->disk, &req);
 
- if(r == 0) {
+  if(r == 0) {
     semaphore_V(tfs->lock);
     return VFS_ERROR;
   }

@@ -35,7 +35,7 @@ int main() {
   }
   ret = syscall_close(3);
   if (ret != 0) {
-    printf("ret : %d", ret);
+    printf("ret : %d\n", ret);
     printf("Could not close filehandle 3\n");
     syscall_halt();
   }
@@ -86,6 +86,12 @@ int main() {
   }
   printf(buffer);
   */
+  ret = syscall_filecount("[disk]/");
+  if (ret < 0) {
+    printf("Somehow Filecount failed? not expected\n");
+    syscall_halt();
+  }
+  printf("[disk] contains %d file(s) \n", ret);
   printf("Testing went fine, shutting down\n");
   syscall_halt();
   return 0;

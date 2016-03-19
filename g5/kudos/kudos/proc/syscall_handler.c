@@ -73,16 +73,16 @@ int syscall_write(int filehandle, const void *buffer, int length) {
 int syscall_open(const char *pathname) {
   if (pathname == NULL) return -1;
   int filehandle;
-  filehandle = vfs_open((char*)pathname);
-  if (filehandle < 0) return filehandle;
-  
-  filehandle = filehandle+2;
   process_control_block_t* block = process_get_current_process_entry();
+  // checks for free space in process list
+  if (block->free_index < 0) return -1;
+  filehandle = vfs_open((char*)pathname);
+  // vfs_open error
+  if (filehandle < 0) return filehandle;
+  // set offset, update free index and insert into list.
+  filehandle = filehandle+2;
   block->openfiles[block->free_index] = filehandle;
   int free_index = process_find_free_index();
-  if (free_index < 0) {
-    return -1;
-  }
   block->free_index = free_index;
   return filehandle;
 }
@@ -92,16 +92,15 @@ int syscall_close(int filehandle) {
   if (filehandle < 3) {
     return VFS_INVALID_PARAMS;
   }
-  int is_in_process_list = process_find_index(filehandle-2);
-  if (is_in_process_list < 0 ) {
+  int index = process_find_index(filehandle);
+  if (index < 0 ) {
     return -1;
   }
   ret = vfs_close(filehandle-2);
-  int index = process_find_index(filehandle);
-  process_get_current_process_entry()->free_index = index;
-  if (ret < 0 || index < 0) {
+  if (ret < 0) {
     return -1;
   }
+  process_get_current_process_entry()->free_index = index;
   process_get_current_process_entry()->openfiles[index] = 0;
   return ret;
 }
