@@ -1,0 +1,89 @@
+\documentclass[12pt]{article}
+\usepackage[a4paper, hmargin={2.8cm, 2.8cm}, vmargin={2.5cm, 2.5cm}]{geometry}
+\usepackage{eso-pic} % \AddToShipoutPicture
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[english]{babel}
+\usepackage{cite}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{enumerate}
+\usepackage{mathrsfs}
+\usepackage{fullpage}
+\usepackage[linkcolor=red]{hyperref}
+\usepackage[final]{graphicx}
+\usepackage{color}
+\usepackage{listings}
+\renewcommand*\lstlistingname{Code Block}
+\definecolor{bg}{rgb}{0.95,0.95,0.95}
+
+%caption distinct from normal text
+\usepackage[hang,small,bf]{caption}
+\usepackage{hyperref}
+
+\hypersetup{
+    colorlinks,%
+    citecolor=black,%
+    filecolor=black,%
+    linkcolor=black,%
+    urlcolor=black
+}
+
+\author{
+  \texttt{Mikkel Enevoldsen} \\[.4cm]
+  \texttt{Kristian Høi} \\[.4cm]
+  \texttt{Simon Van Beest} \\[.4cm]
+  \vspace{8cm}
+}
+
+\title{
+  \vspace{3cm}
+  \Huge{G4} \\[.25cm]
+  \large{Userland Semaphores and thread-safe priority queue}
+  \vspace{.75cm}
+}
+
+\begin{document}
+
+\AddToShipoutPicture*{\put(0,0){\includegraphics*[viewport=0 0 700 600]{includes/ku-farve}}}
+\AddToShipoutPicture*{\put(0,602){\includegraphics*[viewport=0 600 700 1600]{includes/ku-farve}}}
+
+%% Change `ku-en` to `nat-en` to use the `Faculty of Science` header
+\AddToShipoutPicture*{\put(0,0){\includegraphics*{includes/ku-en}}}
+
+\clearpage\maketitle
+\thispagestyle{empty}
+
+\newpage
+
+%\tableofcontents %generate table of content
+
+\thispagestyle{empty}
+
+%\newpage
+\pagestyle{plain}
+\setcounter{page}{1}
+\pagenumbering{arabic}
+
+%A short report where you document your code, discuss different possibilities to solve the tasks, and explain the design decisions made (why you preferred one particular way out of several choices).
+
+\section*{Task 1}
+\subsection*{Implementation}
+In handling TLB exceptions we have handled 3 cases; Load, store and store in case the page is not writeable. First and foremost we have in each case made use of the int 'mode' which indicates wether we are dealing with a user thread or a thread from the kernel. In all cases we end by triggering kernel panic if we get a thread from the kernel, and exits the process if it is a user thread.\\\\
+In the last two cases we start with finding the page that matches the address. We use the 'find\_matching\_page' for this, which leads our pagetable through og returns the relevant index based on our thread entry.\\
+We check if there is mapped to an even or uneven adress, which is used to check V0 or V1. Afterwards we check based on our valid bit, if there can be written. If this is the case we use a random replacement strategy.\\
+Our exceptionhandlers are added, so that they are called when a TLB error occurs.
+Vores exceptionhandlers er tilføjet så de kaldes ved TLB exceptions.
+
+\subsection*{Testing}
+Testing here is not straight forward. We expect the exceptionhandlers to be working, because we know that a TLB exception triggers our functions. We are also able to run our programs, which should invoke a TLB exception.
+
+\section*{Task 2}
+\subsection*{Implementation}
+In implementing 'memlimit' we first check if the argument 'new\_end' is NULL. If it is we return the 'old\_end'. If the 'new\_end' is lower than the 'old\_end' we return NULL. If both these tests fail, we allocate memory for the physical page, maps the virtual memory to the physical page and then updates the heap end. Finally we return the new heap end.
+\subsection*{Testing}
+The 'mem0.c' test seems to be working as expected, eventhough we doubt that the implementation om dynamic memory alocation is complete. This doubt comes from our own test 'testmem.c', which allocates memory, writes to that memory, updates the heap end, allocates more memory, writes to that memory and finally tries to print it to the terminal. This should work, but gives an error councerning re-mapping.
+\end{document}
