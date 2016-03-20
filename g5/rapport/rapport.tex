@@ -41,8 +41,8 @@
 
 \title{
   \vspace{3cm}
-  \Huge{G3} \\[.25cm]
-  \large{System calls for the KUDOS filesystem}
+  \Huge{G5} \\[.25cm]
+  \large{System calls for the KUDOS filesystem and Trivia}
   \vspace{.75cm}
 }
 
@@ -164,7 +164,7 @@ Hvis alle jobs er af ens længde.
   512 & 14,16\\
   1024 & 15,29\\
   \hline
-\end{tabular}
-Above is our timing results. The jump between 8 and 16 is due the first level cache is only 8 pages big and there for the TLB miss penalty is doubled (see. figure 19.5 in chapter 19).\\
-the rest if times is maybe due timeoftheday() function? 
+\end{tabular}\\
+Our data table shows the time for 2, 4 and 8 pages are approximately the same. This means the first level TLB cache is 8 pages. The increase in time is reached when we try with 32 pages. \\
+Onwards the timings untill 512 is relativitly equally which indicates that the second tier cache is around 256 pages. Then theres an small jump til 512 and 1024 which is third tier cache. 
 \end{document}
