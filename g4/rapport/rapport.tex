@@ -42,7 +42,7 @@
 \title{
   \vspace{3cm}
   \Huge{G4} \\[.25cm]
-  \large{Userland Semaphores and thread-safe priority queue}
+  \large{TLB exception and Dynamic memory allocation}
   \vspace{.75cm}
 }
 
@@ -88,5 +88,5 @@ In implementing 'memlimit' we first check if the argument 'new\_end' is NULL. If
 First we check if there is space enough for the requested memory on the current page, if so we just return the new heap pointer.\\
 If we have to allocate more space we create a while loop that continuously allocated space for a new page. it will run until the remaining difference is less that a page size, then new heap pointer is returned.
 \subsection*{Testing}
-The 'mem0.c' test works as expected, eventhough we doubt that the implementation om dynamic memory alocation is complete. Testmem.c, which allocates memory, writes to that memory, updates the heap end, allocates more memory, writes to that memory and finally tries to print it to the terminal.
+The 'mem0.c' test works as expected, eventhough we doubt that the implementation om dynamic memory alocation is complete. Testmem.c, which allocates memory, writes to that memory, updates the heap end, allocates more memory, writes to that memory and finally tries to print it to the terminal. mem1.c prints some nice strings and mem2.c prints a bunch of 'a'. 
 \end{document}
