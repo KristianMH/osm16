@@ -1,4 +1,4 @@
-STUDENTS=stallman_gates_bagger
+STUDENTS=Hoei_Enevoldsen_Beest
 ASSIGNMENT=5
 VERSION=1
 
